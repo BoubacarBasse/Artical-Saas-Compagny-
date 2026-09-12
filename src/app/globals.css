@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+/*
+ * ---------------------------------------------------------------------------
+ * DESIGN TOKEN LAYER
+ * ---------------------------------------------------------------------------
+ * This file is the seam where the design lands.
+ *
+ * Phase 0 (now) defines token NAMES and structure only. The values below are
+ * deliberate placeholders — unstyled neutrals, not a visual identity. Nothing
+ * here is a design decision; picking these values is Phase 1's job, once the
+ * screenshots arrive.
+ *
+ * Rules for everyone downstream:
+ *   1. Components consume tokens. No literal hex values in markup, ever.
+ *   2. Adding a token is cheap; hardcoding a colour is what costs us later.
+ *   3. Light mode only (confirmed). Dark mode, if it ever returns, is an
+ *      additional token set under a `.dark` selector — not a rewrite, which is
+ *      the entire reason this indirection exists.
+ * ---------------------------------------------------------------------------
+ */
+
+@theme {
+  /* --- Colour: surfaces ------------------------------------------------- */
+  --color-canvas: #ffffff;        /* page background */
+  --color-surface: #ffffff;       /* cards, panels */
+  --color-surface-muted: #f6f6f6; /* subtle fills, table stripes */
+  --color-border: #e2e2e2;
+  --color-border-strong: #c8c8c8;
+
+  /* --- Colour: text ----------------------------------------------------- */
+  --color-fg: #171717;
+  --color-fg-muted: #5c5c5c;
+  --color-fg-subtle: #8a8a8a;
+  --color-fg-inverted: #ffffff;
+
+  /* --- Colour: brand / interactive -------------------------------------- */
+  --color-accent: #1a1a1a;
+  --color-accent-hover: #000000;
+  --color-accent-fg: #ffffff;
+  --color-focus: #2563eb;
+
+  /* --- Colour: semantic feedback ---------------------------------------- */
+  --color-danger: #b42318;
+  --color-danger-surface: #fef3f2;
+  --color-success: #067647;
+  --color-success-surface: #ecfdf3;
+  --color-warning: #b54708;
+  --color-warning-surface: #fffaeb;
+  --color-info: #175cd3;
+  --color-info-surface: #eff8ff;
+
+  /* --- Pipeline stage accents ------------------------------------------- */
+  /* One per stage in src/lib/orders/stages.ts. Kept here so the stage module
+     stays pure data and never imports styling concerns. */
+  --color-stage-brief-received: #667085;
+  --color-stage-writing: #175cd3;
+  --color-stage-editing: #7a5af8;
+  --color-stage-review: #b54708;
+  --color-stage-delivered: #067647;
+  --color-stage-cancelled: #b42318;
+
+  /* --- Radii ------------------------------------------------------------ */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-full: 9999px;
+
+  /* --- Elevation -------------------------------------------------------- */
+  --shadow-sm: 0 1px 2px 0 rgb(16 24 40 / 0.05);
+  --shadow-md: 0 4px 8px -2px rgb(16 24 40 / 0.10), 0 2px 4px -2px rgb(16 24 40 / 0.06);
+  --shadow-lg: 0 12px 16px -4px rgb(16 24 40 / 0.08), 0 4px 6px -2px rgb(16 24 40 / 0.03);
+}
+
+/* Placeholder base styles. Phase 1 replaces this block wholesale. */
+body {
+  background: var(--color-canvas);
+  color: var(--color-fg);
+}
