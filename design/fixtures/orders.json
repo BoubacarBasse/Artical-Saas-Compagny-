@@ -1,0 +1,57 @@
+[
+  {
+    "id": "8f14e45f-seed-1",
+    "userId": "8f14e45f-ceea-467a-9f7c-3b2a1d4e5f60",
+    "title": "10 ways small teams can cut cloud spend",
+    "brief": "Practical, tactics-first listicle aimed at engineering leads at companies under 50 people. Cite real pricing where possible. Friendly but not jokey.",
+    "wordCount": 1200,
+    "deadline": "2026-09-02",
+    "stage": "delivered",
+    "createdAt": "2026-08-19T13:41:49.001Z",
+    "updatedAt": "2026-08-21T13:41:49.001Z"
+  },
+  {
+    "id": "8f14e45f-seed-2",
+    "userId": "8f14e45f-ceea-467a-9f7c-3b2a1d4e5f60",
+    "title": "What actually changed in the 2026 accessibility rules",
+    "brief": "Explainer for product managers who are not lawyers. Lead with what they have to do differently, not with the history of the legislation.",
+    "wordCount": 1600,
+    "deadline": "2026-09-15",
+    "stage": "review",
+    "createdAt": "2026-09-01T13:41:49.001Z",
+    "updatedAt": "2026-09-03T13:41:49.001Z"
+  },
+  {
+    "id": "8f14e45f-seed-3",
+    "userId": "8f14e45f-ceea-467a-9f7c-3b2a1d4e5f60",
+    "title": "Case study: migrating a 12-year-old Rails monolith",
+    "brief": "Long-form narrative piece. Interview notes will follow. Technical audience, so do not over-explain the basics.",
+    "wordCount": 2400,
+    "deadline": "2026-09-18",
+    "stage": "editing",
+    "createdAt": "2026-09-04T13:41:49.001Z",
+    "updatedAt": "2026-09-06T13:41:49.001Z"
+  },
+  {
+    "id": "8f14e45f-seed-4",
+    "userId": "8f14e45f-ceea-467a-9f7c-3b2a1d4e5f60",
+    "title": "Why your onboarding email sequence is too long",
+    "brief": "Opinionated take with a clear argument. Growth and lifecycle marketers. Include one worked example of a five-email sequence cut to three.",
+    "wordCount": 900,
+    "deadline": "2026-09-21",
+    "stage": "writing",
+    "createdAt": "2026-09-08T13:41:49.001Z",
+    "updatedAt": "2026-09-10T13:41:49.001Z"
+  },
+  {
+    "id": "8f14e45f-seed-5",
+    "userId": "8f14e45f-ceea-467a-9f7c-3b2a1d4e5f60",
+    "title": "A buyer's guide to headless CMS platforms",
+    "brief": "Comparison piece covering four platforms. Neutral tone, no vendor favouritism. Table of trade-offs at the end.",
+    "wordCount": 2000,
+    "deadline": "2026-10-03",
+    "stage": "brief_received",
+    "createdAt": "2026-09-11T13:41:49.001Z",
+    "updatedAt": "2026-09-12T13:41:49.001Z"
+  }
+]

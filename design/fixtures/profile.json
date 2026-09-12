@@ -1,0 +1,20 @@
+{
+  "id": "8f14e45f-ceea-467a-9f7c-3b2a1d4e5f60",
+  "email": "dana@northbeamlabs.com",
+  "fullName": "Dana Okafor",
+  "company": "Northbeam Labs",
+  "avatarUrl": null,
+  "preferences": {
+    "notifications": {
+      "statusChange": true,
+      "delivered": true,
+      "weeklySummary": false
+    },
+    "orderDefaults": {
+      "wordCount": 1500,
+      "tone": "Direct, no filler",
+      "audience": "Technical decision-makers at mid-size SaaS companies"
+    }
+  },
+  "createdAt": "2026-06-02T09:14:00.000Z"
+}

@@ -1,0 +1,98 @@
+[
+  {
+    "id": "edge-max-title",
+    "userId": "8f14e45f-ceea-467a-9f7c-3b2a1d4e5f60",
+    "title": "Maximum length article title, used to verify truncation, wrapping and column behaviour when a heading reaches the limit.",
+    "brief": "Checks how the longest permitted title behaves in a table row, a card and a page heading.",
+    "wordCount": 1000,
+    "deadline": "2026-09-16",
+    "stage": "editing",
+    "createdAt": "2026-09-09T13:42:19.184Z",
+    "updatedAt": "2026-09-11T13:42:19.184Z",
+    "_why": "Title at the 120-character maximum. Longest string a row or card must hold."
+  },
+  {
+    "id": "edge-min-title",
+    "userId": "8f14e45f-ceea-467a-9f7c-3b2a1d4e5f60",
+    "title": "SEO",
+    "brief": "Checks the opposite extreme, where a heading is far shorter than its container.",
+    "wordCount": 1000,
+    "deadline": "2026-09-24",
+    "stage": "brief_received",
+    "createdAt": "2026-09-09T13:42:19.184Z",
+    "updatedAt": "2026-09-11T13:42:19.184Z",
+    "_why": "Title at the 3-character minimum. Shortest string a row or card must hold."
+  },
+  {
+    "id": "edge-overdue",
+    "userId": "8f14e45f-ceea-467a-9f7c-3b2a1d4e5f60",
+    "title": "Quarterly product update roundup",
+    "brief": "Deadline has passed and the order is still in production. Needs a visibly different treatment from an on-schedule order.",
+    "wordCount": 1400,
+    "deadline": "2026-09-06",
+    "stage": "review",
+    "createdAt": "2026-09-09T13:42:19.184Z",
+    "updatedAt": "2026-09-11T13:42:19.184Z",
+    "_why": "Deadline in the past and still in flight. None of the five sample orders is overdue, and this treatment has to exist."
+  },
+  {
+    "id": "edge-no-deadline",
+    "userId": "8f14e45f-ceea-467a-9f7c-3b2a1d4e5f60",
+    "title": "Evergreen glossary of content marketing terms",
+    "brief": "No deadline was set. The cell, the sort order and any urgency indicator all have to cope with an absent value.",
+    "wordCount": 3000,
+    "deadline": null,
+    "stage": "writing",
+    "createdAt": "2026-09-09T13:42:19.184Z",
+    "updatedAt": "2026-09-11T13:42:19.184Z",
+    "_why": "Deadline is null. Sorting by deadline puts these last in both directions."
+  },
+  {
+    "id": "edge-cancelled",
+    "userId": "8f14e45f-ceea-467a-9f7c-3b2a1d4e5f60",
+    "title": "Comparison post we decided not to run",
+    "brief": "Cancelled after the brief was submitted. Sits outside the pipeline rather than partway along it.",
+    "wordCount": 800,
+    "deadline": "2026-09-14",
+    "stage": "cancelled",
+    "createdAt": "2026-09-09T13:42:19.184Z",
+    "updatedAt": "2026-09-11T13:42:19.184Z",
+    "_why": "Cancelled: terminal, 0% progress, outside the pipeline. Not a failure state."
+  },
+  {
+    "id": "edge-max-words",
+    "userId": "8f14e45f-ceea-467a-9f7c-3b2a1d4e5f60",
+    "title": "The complete technical migration handbook",
+    "brief": "Largest order the form accepts.",
+    "wordCount": 10000,
+    "deadline": "2026-10-12",
+    "stage": "writing",
+    "createdAt": "2026-09-09T13:42:19.184Z",
+    "updatedAt": "2026-09-11T13:42:19.184Z",
+    "_why": "Word count at the 10,000 maximum, alongside the 100 minimum below. Number formatting at both extremes."
+  },
+  {
+    "id": "edge-min-words",
+    "userId": "8f14e45f-ceea-467a-9f7c-3b2a1d4e5f60",
+    "title": "Launch note",
+    "brief": "Smallest order the form accepts.",
+    "wordCount": 100,
+    "deadline": "2026-09-10",
+    "stage": "delivered",
+    "createdAt": "2026-09-09T13:42:19.184Z",
+    "updatedAt": "2026-09-11T13:42:19.184Z",
+    "_why": "Word count at the 100 minimum."
+  },
+  {
+    "id": "edge-long-brief",
+    "userId": "8f14e45f-ceea-467a-9f7c-3b2a1d4e5f60",
+    "title": "Deep-dive on incident response tooling",
+    "brief": "Extended brief used to check how the order detail page handles a body of text that is far longer than the surrounding metadata. It should remain readable, hold a sensible measure, and not push the stage indicator or the metadata out of view. Extended brief used to check how the order detail page handles a body of text that is far longer than the surrounding metadata. It should remain readable, hold a sensible measure, and not push the stage indicator or the metadata out of view. Extended brief used to check how the order detail page handles a body of text that is far longer than the surrounding metadata. It should remain readable, hold a sensible measure, and not push the stage indicator or the metadata out of view. Extended brief used to check how the order detail page handles a body of text that is far longer than the surrounding metadata. It should remain readable, hold a sensible measure, and not push the stage indicator or the metadata out of view. Extended brief used to check how the order detail page handles a body of text that is far longer than the surrounding metadata. It should remain readable, hold a sensible measure, and not push the stage indicator or the metadata out of view. Extended brief used to check how the order detail page handles a body of text that is far longer than the surrounding metadata. It should remain readable, hold a sensible measure, and not push the stage indicator or the metadata out of view.",
+    "wordCount": 4500,
+    "deadline": "2026-09-20",
+    "stage": "editing",
+    "createdAt": "2026-09-09T13:42:19.184Z",
+    "updatedAt": "2026-09-11T13:42:19.184Z",
+    "_why": "A long brief. The detail page must stay readable when the brief dominates the layout."
+  }
+]
