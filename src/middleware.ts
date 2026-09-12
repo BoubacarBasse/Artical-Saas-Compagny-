@@ -19,7 +19,7 @@ import { MOCK_COOKIE, decodeState } from "@/lib/data/mock/state";
 import { updateSession } from "@/lib/supabase/middleware";
 
 /** Everything under these prefixes requires a session. */
-const PROTECTED_PREFIXES = ["/dashboard", "/orders", "/settings"];
+const PROTECTED_PREFIXES = ["/dashboard", "/orders", "/inbox", "/settings"];
 
 /** Signing in again while already signed in just sends you to the dashboard. */
 const AUTH_ROUTES = ["/login", "/signup"];

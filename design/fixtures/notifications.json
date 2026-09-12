@@ -1,0 +1,42 @@
+[
+  {
+    "id": "8f14e45f-notif-1",
+    "kind": "order_update",
+    "title": "Your order 'SaaS Growth Guide' is now in progress",
+    "orderId": "8f14e45f-order-1024",
+    "createdAt": "2026-09-09T14:55:51.733Z",
+    "readAt": null
+  },
+  {
+    "id": "8f14e45f-notif-2",
+    "kind": "order_update",
+    "title": "Order 'Q3 newsletter' is ready for your review",
+    "orderId": "8f14e45f-order-1022",
+    "createdAt": "2026-09-03T14:55:51.733Z",
+    "readAt": null
+  },
+  {
+    "id": "8f14e45f-notif-3",
+    "kind": "order_complete",
+    "title": "Order 'Integrations launch announcement' marked as complete",
+    "orderId": "8f14e45f-order-1021",
+    "createdAt": "2026-08-25T14:55:51.733Z",
+    "readAt": "2026-08-26T14:55:51.733Z"
+  },
+  {
+    "id": "8f14e45f-notif-4",
+    "kind": "order_complete",
+    "title": "Order 'What actually changed in the 2026 accessibility rules' marked as complete",
+    "orderId": "8f14e45f-order-1020",
+    "createdAt": "2026-08-10T14:55:51.733Z",
+    "readAt": "2026-08-11T14:55:51.733Z"
+  },
+  {
+    "id": "8f14e45f-notif-5",
+    "kind": "system",
+    "title": "Welcome to Article Orders",
+    "orderId": null,
+    "createdAt": "2026-03-10T14:55:51.733Z",
+    "readAt": "2026-03-10T14:55:51.733Z"
+  }
+]

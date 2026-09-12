@@ -1,98 +1,284 @@
 [
   {
     "id": "edge-max-title",
+    "_why": "Title at the 120-character maximum. The longest string a row, card or page heading must hold.",
+    "orderNumber": 9001,
     "userId": "8f14e45f-ceea-467a-9f7c-3b2a1d4e5f60",
     "title": "Maximum length article title, used to verify truncation, wrapping and column behaviour when a heading reaches the limit.",
-    "brief": "Checks how the longest permitted title behaves in a table row, a card and a page heading.",
+    "brief": "A brief long enough to be valid.",
+    "keywords": [],
+    "format": "blog_post",
     "wordCount": 1000,
     "deadline": "2026-09-16",
-    "stage": "editing",
-    "createdAt": "2026-09-09T13:42:19.184Z",
-    "updatedAt": "2026-09-11T13:42:19.184Z",
-    "_why": "Title at the 120-character maximum. Longest string a row or card must hold."
+    "status": "in_progress",
+    "priority": "medium",
+    "assignees": [
+      {
+        "name": "Theo Abara",
+        "avatarUrl": null
+      }
+    ],
+    "deliverable": null,
+    "createdAt": "2026-09-07T14:56:21.194Z",
+    "updatedAt": "2026-09-10T14:56:21.194Z"
   },
   {
     "id": "edge-min-title",
+    "_why": "Title at the 3-character minimum. The opposite extreme.",
+    "orderNumber": 9002,
     "userId": "8f14e45f-ceea-467a-9f7c-3b2a1d4e5f60",
     "title": "SEO",
-    "brief": "Checks the opposite extreme, where a heading is far shorter than its container.",
+    "brief": "A brief long enough to be valid.",
+    "keywords": [],
+    "format": "blog_post",
     "wordCount": 1000,
     "deadline": "2026-09-24",
-    "stage": "brief_received",
-    "createdAt": "2026-09-09T13:42:19.184Z",
-    "updatedAt": "2026-09-11T13:42:19.184Z",
-    "_why": "Title at the 3-character minimum. Shortest string a row or card must hold."
+    "status": "draft",
+    "priority": "medium",
+    "assignees": [],
+    "deliverable": null,
+    "createdAt": "2026-09-07T14:56:21.194Z",
+    "updatedAt": "2026-09-10T14:56:21.194Z"
   },
   {
     "id": "edge-overdue",
+    "_why": "Deadline passed, work still in flight. None of the thirteen sample orders is overdue and this treatment has to exist.",
+    "orderNumber": 9003,
     "userId": "8f14e45f-ceea-467a-9f7c-3b2a1d4e5f60",
     "title": "Quarterly product update roundup",
-    "brief": "Deadline has passed and the order is still in production. Needs a visibly different treatment from an on-schedule order.",
+    "brief": "A brief long enough to be valid.",
+    "keywords": [],
+    "format": "blog_post",
     "wordCount": 1400,
     "deadline": "2026-09-06",
-    "stage": "review",
-    "createdAt": "2026-09-09T13:42:19.184Z",
-    "updatedAt": "2026-09-11T13:42:19.184Z",
-    "_why": "Deadline in the past and still in flight. None of the five sample orders is overdue, and this treatment has to exist."
+    "status": "pending_review",
+    "priority": "high",
+    "assignees": [
+      {
+        "name": "Ruth Mbeki",
+        "avatarUrl": null
+      }
+    ],
+    "deliverable": null,
+    "createdAt": "2026-09-07T14:56:21.194Z",
+    "updatedAt": "2026-09-10T14:56:21.194Z"
   },
   {
     "id": "edge-no-deadline",
+    "_why": "Null deadline. Sorting by deadline puts these last in both directions.",
+    "orderNumber": 9004,
     "userId": "8f14e45f-ceea-467a-9f7c-3b2a1d4e5f60",
     "title": "Evergreen glossary of content marketing terms",
-    "brief": "No deadline was set. The cell, the sort order and any urgency indicator all have to cope with an absent value.",
+    "brief": "A brief long enough to be valid.",
+    "keywords": [],
+    "format": "blog_post",
     "wordCount": 3000,
     "deadline": null,
-    "stage": "writing",
-    "createdAt": "2026-09-09T13:42:19.184Z",
-    "updatedAt": "2026-09-11T13:42:19.184Z",
-    "_why": "Deadline is null. Sorting by deadline puts these last in both directions."
+    "status": "in_progress",
+    "priority": "medium",
+    "assignees": [
+      {
+        "name": "Mara Lindqvist",
+        "avatarUrl": null
+      }
+    ],
+    "deliverable": null,
+    "createdAt": "2026-09-07T14:56:21.194Z",
+    "updatedAt": "2026-09-10T14:56:21.194Z"
   },
   {
     "id": "edge-cancelled",
+    "_why": "Cancelled: terminal, outside the flow, no writer. Not an error state.",
+    "orderNumber": 9005,
     "userId": "8f14e45f-ceea-467a-9f7c-3b2a1d4e5f60",
     "title": "Comparison post we decided not to run",
-    "brief": "Cancelled after the brief was submitted. Sits outside the pipeline rather than partway along it.",
+    "brief": "A brief long enough to be valid.",
+    "keywords": [],
+    "format": "blog_post",
     "wordCount": 800,
     "deadline": "2026-09-14",
-    "stage": "cancelled",
-    "createdAt": "2026-09-09T13:42:19.184Z",
-    "updatedAt": "2026-09-11T13:42:19.184Z",
-    "_why": "Cancelled: terminal, 0% progress, outside the pipeline. Not a failure state."
+    "status": "cancelled",
+    "priority": "medium",
+    "assignees": [],
+    "deliverable": null,
+    "createdAt": "2026-09-07T14:56:21.194Z",
+    "updatedAt": "2026-09-10T14:56:21.194Z"
   },
   {
     "id": "edge-max-words",
+    "_why": "Word count at the 10,000 maximum. Widest number the column must hold.",
+    "orderNumber": 9006,
     "userId": "8f14e45f-ceea-467a-9f7c-3b2a1d4e5f60",
     "title": "The complete technical migration handbook",
-    "brief": "Largest order the form accepts.",
+    "brief": "A brief long enough to be valid.",
+    "keywords": [],
+    "format": "whitepaper",
     "wordCount": 10000,
     "deadline": "2026-10-12",
-    "stage": "writing",
-    "createdAt": "2026-09-09T13:42:19.184Z",
-    "updatedAt": "2026-09-11T13:42:19.184Z",
-    "_why": "Word count at the 10,000 maximum, alongside the 100 minimum below. Number formatting at both extremes."
+    "status": "in_progress",
+    "priority": "high",
+    "assignees": [
+      {
+        "name": "Theo Abara",
+        "avatarUrl": null
+      },
+      {
+        "name": "Inés Cabrera",
+        "avatarUrl": null
+      }
+    ],
+    "deliverable": null,
+    "createdAt": "2026-09-07T14:56:21.194Z",
+    "updatedAt": "2026-09-10T14:56:21.194Z"
   },
   {
     "id": "edge-min-words",
+    "_why": "Word count at the 100 minimum, and a completed order with a deliverable.",
+    "orderNumber": 9007,
     "userId": "8f14e45f-ceea-467a-9f7c-3b2a1d4e5f60",
     "title": "Launch note",
-    "brief": "Smallest order the form accepts.",
+    "brief": "A brief long enough to be valid.",
+    "keywords": [],
+    "format": "blog_post",
     "wordCount": 100,
     "deadline": "2026-09-10",
-    "stage": "delivered",
-    "createdAt": "2026-09-09T13:42:19.184Z",
-    "updatedAt": "2026-09-11T13:42:19.184Z",
-    "_why": "Word count at the 100 minimum."
+    "status": "completed",
+    "priority": "medium",
+    "assignees": [
+      {
+        "name": "Mara Lindqvist",
+        "avatarUrl": null
+      }
+    ],
+    "deliverable": {
+      "filename": "Launch_Note.docx",
+      "url": "#demo-download-unavailable",
+      "uploadedAt": "2026-09-10T14:56:21.194Z"
+    },
+    "createdAt": "2026-09-07T14:56:21.194Z",
+    "updatedAt": "2026-09-10T14:56:21.194Z"
   },
   {
     "id": "edge-long-brief",
+    "_why": "A brief long enough to dominate the detail page. It must stay readable without burying the status.",
+    "orderNumber": 9008,
     "userId": "8f14e45f-ceea-467a-9f7c-3b2a1d4e5f60",
     "title": "Deep-dive on incident response tooling",
-    "brief": "Extended brief used to check how the order detail page handles a body of text that is far longer than the surrounding metadata. It should remain readable, hold a sensible measure, and not push the stage indicator or the metadata out of view. Extended brief used to check how the order detail page handles a body of text that is far longer than the surrounding metadata. It should remain readable, hold a sensible measure, and not push the stage indicator or the metadata out of view. Extended brief used to check how the order detail page handles a body of text that is far longer than the surrounding metadata. It should remain readable, hold a sensible measure, and not push the stage indicator or the metadata out of view. Extended brief used to check how the order detail page handles a body of text that is far longer than the surrounding metadata. It should remain readable, hold a sensible measure, and not push the stage indicator or the metadata out of view. Extended brief used to check how the order detail page handles a body of text that is far longer than the surrounding metadata. It should remain readable, hold a sensible measure, and not push the stage indicator or the metadata out of view. Extended brief used to check how the order detail page handles a body of text that is far longer than the surrounding metadata. It should remain readable, hold a sensible measure, and not push the stage indicator or the metadata out of view.",
+    "brief": "Extended brief used to check how the order detail page handles a body of text far longer than the surrounding metadata. It should stay readable, hold a sensible measure, and not push the status or the details panel out of view. Extended brief used to check how the order detail page handles a body of text far longer than the surrounding metadata. It should stay readable, hold a sensible measure, and not push the status or the details panel out of view. Extended brief used to check how the order detail page handles a body of text far longer than the surrounding metadata. It should stay readable, hold a sensible measure, and not push the status or the details panel out of view. Extended brief used to check how the order detail page handles a body of text far longer than the surrounding metadata. It should stay readable, hold a sensible measure, and not push the status or the details panel out of view. Extended brief used to check how the order detail page handles a body of text far longer than the surrounding metadata. It should stay readable, hold a sensible measure, and not push the status or the details panel out of view. Extended brief used to check how the order detail page handles a body of text far longer than the surrounding metadata. It should stay readable, hold a sensible measure, and not push the status or the details panel out of view.",
+    "keywords": [
+      "incident response",
+      "on-call",
+      "observability"
+    ],
+    "format": "blog_post",
     "wordCount": 4500,
     "deadline": "2026-09-20",
-    "stage": "editing",
-    "createdAt": "2026-09-09T13:42:19.184Z",
-    "updatedAt": "2026-09-11T13:42:19.184Z",
-    "_why": "A long brief. The detail page must stay readable when the brief dominates the layout."
+    "status": "in_progress",
+    "priority": "medium",
+    "assignees": [
+      {
+        "name": "Inés Cabrera",
+        "avatarUrl": null
+      }
+    ],
+    "deliverable": null,
+    "createdAt": "2026-09-07T14:56:21.194Z",
+    "updatedAt": "2026-09-10T14:56:21.194Z"
+  },
+  {
+    "id": "edge-max-keywords",
+    "_why": "Ten keywords, the maximum. They have to wrap without breaking the layout.",
+    "orderNumber": 9009,
+    "userId": "8f14e45f-ceea-467a-9f7c-3b2a1d4e5f60",
+    "title": "The complete SEO checklist for 2026",
+    "brief": "A brief long enough to be valid.",
+    "keywords": [
+      "seo",
+      "technical seo",
+      "core web vitals",
+      "schema markup",
+      "internal linking",
+      "keyword research",
+      "serp features",
+      "link building",
+      "content pruning",
+      "crawl budget"
+    ],
+    "format": "blog_post",
+    "wordCount": 1000,
+    "deadline": "2026-09-17",
+    "status": "pending_review",
+    "priority": "medium",
+    "assignees": [
+      {
+        "name": "Ruth Mbeki",
+        "avatarUrl": null
+      }
+    ],
+    "deliverable": null,
+    "createdAt": "2026-09-07T14:56:21.194Z",
+    "updatedAt": "2026-09-10T14:56:21.194Z"
+  },
+  {
+    "id": "edge-many-assignees",
+    "_why": "Four writers on one piece. The avatar stack needs an overflow rule.",
+    "orderNumber": 9010,
+    "userId": "8f14e45f-ceea-467a-9f7c-3b2a1d4e5f60",
+    "title": "Annual industry benchmark report",
+    "brief": "A brief long enough to be valid.",
+    "keywords": [],
+    "format": "whitepaper",
+    "wordCount": 8000,
+    "deadline": "2026-10-07",
+    "status": "in_progress",
+    "priority": "high",
+    "assignees": [
+      {
+        "name": "Mara Lindqvist",
+        "avatarUrl": null
+      },
+      {
+        "name": "Theo Abara",
+        "avatarUrl": null
+      },
+      {
+        "name": "Inés Cabrera",
+        "avatarUrl": null
+      },
+      {
+        "name": "Ruth Mbeki",
+        "avatarUrl": null
+      }
+    ],
+    "deliverable": null,
+    "createdAt": "2026-09-07T14:56:21.194Z",
+    "updatedAt": "2026-09-10T14:56:21.194Z"
+  },
+  {
+    "id": "edge-long-filename",
+    "_why": "A deliverable whose filename is long enough to need truncating.",
+    "orderNumber": 9011,
+    "userId": "8f14e45f-ceea-467a-9f7c-3b2a1d4e5f60",
+    "title": "Partner integration announcement",
+    "brief": "A brief long enough to be valid.",
+    "keywords": [],
+    "format": "blog_post",
+    "wordCount": 1000,
+    "deadline": "2026-09-03",
+    "status": "completed",
+    "priority": "medium",
+    "assignees": [
+      {
+        "name": "Theo Abara",
+        "avatarUrl": null
+      }
+    ],
+    "deliverable": {
+      "filename": "Partner_Integration_Announcement_Final_Approved_v7_with_legal_revisions.docx",
+      "url": "#demo-download-unavailable",
+      "uploadedAt": "2026-09-03T14:56:21.194Z"
+    },
+    "createdAt": "2026-09-07T14:56:21.194Z",
+    "updatedAt": "2026-09-10T14:56:21.194Z"
   }
 ]

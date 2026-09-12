@@ -50,15 +50,22 @@
   --color-info: #175cd3;
   --color-info-surface: #eff8ff;
 
-  /* --- Pipeline stage accents ------------------------------------------- */
-  /* One per stage in src/lib/orders/stages.ts. Kept here so the stage module
-     stays pure data and never imports styling concerns. */
-  --color-stage-brief-received: #667085;
-  --color-stage-writing: #175cd3;
-  --color-stage-editing: #7a5af8;
-  --color-stage-review: #b54708;
-  --color-stage-delivered: #067647;
-  --color-stage-cancelled: #b42318;
+  /* --- Order status accents --------------------------------------------- */
+  /* One per status in src/lib/orders/statuses.ts. Kept here so the status
+     module stays pure data and never imports styling concerns. */
+  --color-status-draft: #667085;
+  --color-status-in-progress: #6941c6;
+  --color-status-pending-review: #b54708;
+  --color-status-completed: #067647;
+  --color-status-cancelled: #b42318;
+
+  /* --- Chart ------------------------------------------------------------- */
+  /* The dashboard completion chart. Separate from the status colours because
+     it is one series, not a category scale. */
+  --color-chart-line: #6941c6;
+  --color-chart-fill-from: #6941c6;
+  --color-chart-fill-to: #ffffff;
+  --color-chart-grid: #eaecf0;
 
   /* --- Radii ------------------------------------------------------------ */
   --radius-sm: 0.25rem;

@@ -12,7 +12,7 @@ const orders = [
     id: "a",
     title: "Cloud cost guide",
     brief: "About saving money on infrastructure",
-    stage: "delivered",
+    status: "completed",
     createdAt: "2026-01-01T00:00:00.000Z",
     deadline: "2026-03-01",
   }),
@@ -20,7 +20,7 @@ const orders = [
     id: "b",
     title: "Accessibility rules",
     brief: "Explainer for product managers",
-    stage: "review",
+    status: "pending_review",
     createdAt: "2026-02-01T00:00:00.000Z",
     deadline: "2026-02-01",
   }),
@@ -28,7 +28,7 @@ const orders = [
     id: "c",
     title: "Zebra migration story",
     brief: "Mentions cloud in passing",
-    stage: "writing",
+    status: "in_progress",
     createdAt: "2026-03-01T00:00:00.000Z",
     deadline: null,
   }),
@@ -52,15 +52,15 @@ test.describe("order query engine", () => {
     expect(applyOrderQuery(orders, { search: "  cloud  " }).total).toBe(2);
   });
 
-  test("filters by stage, and an empty stage list means no filter", () => {
-    expect(applyOrderQuery(orders, { stages: ["writing"] }).rows.map((o) => o.id))
+  test("filters by status, and an empty status list means no filter", () => {
+    expect(applyOrderQuery(orders, { statuses: ["in_progress"] }).rows.map((o) => o.id))
       .toEqual(["c"]);
-    expect(applyOrderQuery(orders, { stages: ["writing", "review"] }).total).toBe(2);
-    expect(applyOrderQuery(orders, { stages: [] }).total).toBe(3);
+    expect(applyOrderQuery(orders, { statuses: ["in_progress", "pending_review"] }).total).toBe(2);
+    expect(applyOrderQuery(orders, { statuses: [] }).total).toBe(3);
   });
 
-  test("combines search and stage filters", () => {
-    const page = applyOrderQuery(orders, { search: "cloud", stages: ["delivered"] });
+  test("combines search and status filters", () => {
+    const page = applyOrderQuery(orders, { search: "cloud", statuses: ["completed"] });
     expect(page.rows.map((o) => o.id)).toEqual(["a"]);
   });
 

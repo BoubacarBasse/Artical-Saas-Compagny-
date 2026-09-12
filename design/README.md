@@ -2,14 +2,25 @@
 
 **For Claude Design. Start here.**
 
-A content-writing business needs a client-facing dashboard. Clients sign up, order articles, and
-follow those articles through production. The application is already built up to the point where
-the design begins: routing, data model, validation, auth guard and tests all exist. Every page is
-currently an unstyled placeholder, waiting for this.
+A content-writing business needs a client-facing dashboard. Clients sign up, order articles, follow
+them through production, and download the finished piece. The application is already built up to
+the point where the design begins: routing, data model, validation, auth guard and tests all exist.
+Every page is currently an unstyled placeholder, waiting for this.
 
 **Nothing in this folder makes a visual decision.** No colours, no type, no spacing, no layout.
-That is deliberate — those choices are yours. What this folder does is tell you exactly what has
-to be designed, what real content goes in it, and what the system can and cannot actually do.
+Those choices are yours. What this folder does is say exactly what has to be designed, what real
+content goes in it, and what the system can actually do.
+
+---
+
+## There is a reference
+
+This app is being modelled on a dashboard the client already likes — a three-item sidebar
+(Dashboard · My Tasks · Inbox), a stat row, a completion chart, a task table with status badges and
+assignee avatars, and an order detail page with a details panel and a timeline. The data model in
+this brief was rebuilt to support that shape exactly.
+
+Treat it as the intended *structure*, not as the visual answer. The look is still open.
 
 ---
 
@@ -17,16 +28,18 @@ to be designed, what real content goes in it, and what the system can and cannot
 
 | File | What it is |
 |---|---|
-| `01-product.md` | What the product is, who uses it, and two quirks that shape the UI |
+| `01-product.md` | What the product is, who uses it, and the quirks that shape the UI |
 | `02-screens.md` | **The brief proper** — every screen, every state, as required artboards |
-| `03-data-and-content.md` | Real field names, real limits, real copy, and what the data cannot support |
+| `03-data-and-content.md` | Real field names, real limits, real copy, and the few things the data cannot do |
 | `04-tokens.md` | The token slots the code already has, for you to fill in |
-| `fixtures/orders.json` | Five real orders — use these, not lorem ipsum |
+| `fixtures/orders.json` | Thirteen real orders across five statuses — use these, not lorem ipsum |
+| `fixtures/order-events.json` | The timeline entries behind those orders |
+| `fixtures/notifications.json` | Five inbox items, two unread |
+| `fixtures/dashboard.json` | The exact stat counts and chart series the app computes |
 | `fixtures/profile.json` | A real user profile with preferences |
-| `fixtures/edge-cases.json` | Eight awkward records: longest title, overdue, cancelled, no deadline |
+| `fixtures/edge-cases.json` | Eleven awkward records: longest title, overdue, ten keywords, four assignees |
 
-Read `03-data-and-content.md` before `02-screens.md`. It has a section called *What the data can
-and cannot support*, and it will save you designing something that cannot be built.
+Read `03-data-and-content.md` before `02-screens.md`.
 
 ---
 
@@ -44,17 +57,20 @@ baked into a design system permanently. Ten minutes filling in that table saves 
 
 ## Push back rather than design around a gap
 
-If a screen would be better with data the system does not store — per-stage timestamps, turnaround
-time, an on-time percentage, a message thread, an attached file — **say so instead of designing
+If a screen would be better with data the system does not store, **say so instead of designing
 around it.** That is a product decision, not a design one, and it can be made. Adding a field is
 cheap; discovering after the fact that a finished screen cannot be built is not.
 
-The list of what does and does not exist is in `03-data-and-content.md`.
+The short list of what does not exist is at the end of `03-data-and-content.md`.
 
 ---
 
-## Two constraints, before anything else
+## Three constraints, before anything else
 
 - **Light mode only.** No dark palette is needed. Do not design one.
-- **Clients never change an order's stage.** Staff advance orders by hand in the database. Nothing
-  in this interface is a control for moving work forward — the client watches, and orders.
+- **Clients never change an order's status, priority, or who is assigned to it.** Staff do that by
+  hand in the database. Nothing in this interface is a control for moving work forward — the client
+  orders, watches, and downloads.
+- **The chart is at agency scale.** One client completes one to three pieces a month, not hundreds.
+  The real series is in `fixtures/dashboard.json`. Design for those numbers, including the month
+  with a zero.

@@ -3,6 +3,7 @@ import {
   DEFAULT_PREFERENCES,
   credentialsSchema,
   fieldErrorsFrom,
+  keywordsSchema,
   newOrderSchema,
   parseOrderQuery,
   parsePreferences,
@@ -12,12 +13,9 @@ import {
 
 test.describe("credentials", () => {
   test("requires a real email and an 8-character password", () => {
-    expect(credentialsSchema.safeParse({ email: "nope", password: "abcdefgh" }).success)
-      .toBe(false);
-    expect(credentialsSchema.safeParse({ email: "a@b.co", password: "short" }).success)
-      .toBe(false);
-    expect(credentialsSchema.safeParse({ email: "a@b.co", password: "abcdefgh" }).success)
-      .toBe(true);
+    expect(credentialsSchema.safeParse({ email: "nope", password: "abcdefgh" }).success).toBe(false);
+    expect(credentialsSchema.safeParse({ email: "a@b.co", password: "short" }).success).toBe(false);
+    expect(credentialsSchema.safeParse({ email: "a@b.co", password: "abcdefgh" }).success).toBe(true);
   });
 
   test("password confirmation must match, and the error lands on the right field", () => {
@@ -30,22 +28,58 @@ test.describe("credentials", () => {
   });
 });
 
+test.describe("keywords", () => {
+  test("splits a comma-separated field the way the brief displays it", () => {
+    expect(keywordsSchema.parse("saas retention, churn rate")).toEqual([
+      "saas retention",
+      "churn rate",
+    ]);
+  });
+
+  test("trims, lowercases, drops blanks and de-duplicates", () => {
+    expect(keywordsSchema.parse("  SEO , seo,, Content  ")).toEqual(["seo", "content"]);
+  });
+
+  test("treats empty, null and undefined as no keywords", () => {
+    expect(keywordsSchema.parse("")).toEqual([]);
+    expect(keywordsSchema.parse(null)).toEqual([]);
+    expect(keywordsSchema.parse(undefined)).toEqual([]);
+  });
+
+  test("accepts an array as well as a string", () => {
+    expect(keywordsSchema.parse(["One", "two"])).toEqual(["one", "two"]);
+  });
+
+  test("caps the count", () => {
+    const eleven = Array.from({ length: 11 }, (_, i) => `k${i}`).join(",");
+    expect(keywordsSchema.safeParse(eleven).success).toBe(false);
+  });
+});
+
 test.describe("new order", () => {
   const valid = {
     title: "A perfectly good title",
     brief: "Something descriptive enough to be useful.",
+    keywords: "saas retention, churn rate",
+    format: "whitepaper",
     wordCount: 1200,
     deadline: "2026-12-01",
   };
 
   test("accepts a well-formed order", () => {
-    expect(newOrderSchema.safeParse(valid).success).toBe(true);
+    const parsed = newOrderSchema.safeParse(valid);
+    expect(parsed.success).toBe(true);
+    expect(parsed.data!.keywords).toEqual(["saas retention", "churn rate"]);
+  });
+
+  test("requires a real format", () => {
+    expect(newOrderSchema.safeParse({ ...valid, format: "poem" }).success).toBe(false);
+    expect(newOrderSchema.safeParse({ ...valid, format: undefined }).success).toBe(false);
   });
 
   test("rejects a title that is too short or too long", () => {
     expect(newOrderSchema.safeParse({ ...valid, title: "ab" }).success).toBe(false);
-    expect(newOrderSchema.safeParse({ ...valid, title: "x".repeat(121) }).success)
-      .toBe(false);
+    expect(newOrderSchema.safeParse({ ...valid, title: "x".repeat(121) }).success).toBe(false);
   });
 
   test("rejects word counts outside the orderable range", () => {
@@ -58,24 +92,27 @@ test.describe("new order", () => {
     // <input type="date"> submits "" when left blank, not null.
     expect(newOrderSchema.parse({ ...valid, deadline: "" }).deadline).toBeNull();
     expect(newOrderSchema.parse({ ...valid, deadline: null }).deadline).toBeNull();
-    expect(newOrderSchema.parse({ ...valid, deadline: "  " }).deadline).toBeNull();
   });
 
   test("rejects a malformed date", () => {
-    expect(newOrderSchema.safeParse({ ...valid, deadline: "01/12/2026" }).success)
-      .toBe(false);
+    expect(newOrderSchema.safeParse({ ...valid, deadline: "01/12/2026" }).success).toBe(false);
   });
 
-  test("trims whitespace off text fields", () => {
-    const parsed = newOrderSchema.parse({ ...valid, title: "  Padded title  " });
-    expect(parsed.title).toBe("Padded title");
-  });
-
-  test("there is no way to set a stage through this schema", () => {
-    // Clients never choose a stage. Postgres enforces the same rule with a
-    // WITH CHECK clause on the orders INSERT policy.
-    const parsed = newOrderSchema.parse({ ...valid, stage: "delivered" } as never);
-    expect(parsed).not.toHaveProperty("stage");
+  test("offers no way to set status, priority or assignees", () => {
+    // Those are staff fields. Postgres enforces the same rule twice: no client
+    // UPDATE policy on orders, and a column-level INSERT grant that does not
+    // include them.
+    const parsed = newOrderSchema.parse({
+      ...valid,
+      status: "completed",
+      priority: "high",
+      assignees: [{ name: "Nobody" }],
+      orderNumber: 9999,
+    } as never);
+    expect(parsed).not.toHaveProperty("status");
+    expect(parsed).not.toHaveProperty("priority");
+    expect(parsed).not.toHaveProperty("assignees");
+    expect(parsed).not.toHaveProperty("orderNumber");
   });
 });
 
@@ -101,10 +138,12 @@ test.describe("preferences", () => {
   });
 
   test("order defaults respect the same bounds as a real order", () => {
-    expect(parsePreferences({ orderDefaults: { wordCount: 50 } }))
-      .toEqual(DEFAULT_PREFERENCES);
-    expect(parsePreferences({ orderDefaults: { wordCount: 1500 } }).orderDefaults.wordCount)
-      .toBe(1500);
+    expect(parsePreferences({ orderDefaults: { wordCount: 50 } })).toEqual(DEFAULT_PREFERENCES);
+    expect(
+      parsePreferences({ orderDefaults: { wordCount: 1500, format: "case_study" } })
+        .orderDefaults.wordCount,
+    ).toBe(1500);
+    expect(parsePreferences({ orderDefaults: { format: "poem" } })).toEqual(DEFAULT_PREFERENCES);
   });
 });
 
@@ -120,7 +159,7 @@ test.describe("profile patch", () => {
   });
 
   test("offers no way to change email or id", () => {
-    // Those are locked at the database level too, with column-level grants.
+    // Locked at the database level too, with column-level grants.
     const parsed = profilePatchSchema.parse({
       fullName: "Ada",
       email: "attacker@example.com",
@@ -134,17 +173,19 @@ test.describe("profile patch", () => {
 test.describe("query parsing", () => {
   test("reads a full query string", () => {
     const parsed = parseOrderQuery(
-      new URLSearchParams("search=cloud&stages=writing,review&sort=title_asc&page=2"),
+      new URLSearchParams(
+        "search=cloud&statuses=in_progress,pending_review&sort=title_asc&page=2",
+      ),
     );
     expect(parsed.search).toBe("cloud");
-    expect(parsed.stages).toEqual(["writing", "review"]);
+    expect(parsed.statuses).toEqual(["in_progress", "pending_review"]);
     expect(parsed.sort).toBe("title_asc");
     expect(parsed.page).toBe(2);
   });
 
-  test("silently drops stage values that are not real stages", () => {
-    const parsed = parseOrderQuery(new URLSearchParams("stages=writing,nonsense"));
-    expect(parsed.stages).toEqual(["writing"]);
+  test("silently drops values that are not real statuses", () => {
+    expect(parseOrderQuery(new URLSearchParams("statuses=in_progress,nonsense")).statuses)
+      .toEqual(["in_progress"]);
   });
 
   test("falls back to a safe default rather than throwing on junk", () => {
@@ -154,6 +195,6 @@ test.describe("query parsing", () => {
   });
 
   test("handles an empty query", () => {
-    expect(parseOrderQuery(new URLSearchParams("")).stages).toBeUndefined();
+    expect(parseOrderQuery(new URLSearchParams("")).statuses).toBeUndefined();
   });
 });

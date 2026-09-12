@@ -12,9 +12,13 @@ import {
   DEFAULT_PER_PAGE,
   err,
   ok,
+  type DashboardStats,
   type DataProvider,
+  type Deliverable,
   type NewOrderInput,
+  type Notification,
   type Order,
+  type OrderEvent,
   type OrderQuery,
   type Page,
   type Profile,
@@ -30,19 +34,40 @@ import {
   passwordSchema,
   profilePatchSchema,
 } from "../schemas";
-import { INITIAL_STAGE, type OrderStage } from "@/lib/orders/stages";
+import type {
+  OrderFormat,
+  OrderPriority,
+  OrderStatus,
+} from "@/lib/orders/statuses";
+import { computeDashboardStats } from "@/lib/orders/stats";
 import { createClient } from "@/lib/supabase/server";
 
 const NOT_SIGNED_IN = "You need to be signed in to do that";
 
+/** Bucket holding finished pieces. Private; access is via short-lived URLs. */
+const DELIVERABLES_BUCKET = "deliverables";
+const SIGNED_URL_TTL_SECONDS = 60 * 60;
+
+interface StoredDeliverable {
+  filename: string;
+  path: string;
+  uploadedAt: string;
+}
+
 interface OrderRow {
   id: string;
+  order_number: number;
   user_id: string;
   title: string;
   brief: string;
+  keywords: string[] | null;
+  format: OrderFormat;
   word_count: number;
   deadline: string | null;
-  stage: OrderStage;
+  status: OrderStatus;
+  priority: OrderPriority;
+  assignees: unknown;
+  deliverable: StoredDeliverable | null;
   created_at: string;
   updated_at: string;
 }
@@ -57,15 +82,31 @@ interface ProfileRow {
   created_at: string;
 }
 
-function toOrder(row: OrderRow): Order {
+function toAssignees(value: unknown): Order["assignees"] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((a): a is Record<string, unknown> => typeof a === "object" && a !== null)
+    .map((a) => ({
+      name: typeof a.name === "string" ? a.name : "Unknown",
+      avatarUrl: typeof a.avatarUrl === "string" ? a.avatarUrl : null,
+    }));
+}
+
+function toOrder(row: OrderRow, deliverable: Deliverable | null): Order {
   return {
     id: row.id,
+    orderNumber: row.order_number,
     userId: row.user_id,
     title: row.title,
     brief: row.brief,
+    keywords: row.keywords ?? [],
+    format: row.format,
     wordCount: row.word_count,
     deadline: row.deadline,
-    stage: row.stage,
+    status: row.status,
+    priority: row.priority,
+    assignees: toAssignees(row.assignees),
+    deliverable,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -86,8 +127,7 @@ function toProfile(row: ProfileRow): Profile {
 /**
  * PostgREST's `or()` filter is a comma-separated string, and `ilike` treats `%`
  * and `_` as wildcards. An unescaped search term could therefore change the
- * shape of the query rather than just its value. Strip the structural
- * characters before interpolating.
+ * shape of the query rather than just its value. Strip structural characters.
  */
 function sanitiseSearch(input: string): string {
   return input.replace(/[,()%_*\\]/g, " ").trim();
@@ -141,8 +181,8 @@ export const supabaseProvider: DataProvider = {
       password: parsed.data.password,
     });
 
-    // Deliberately vague, and matching the mock provider's wording exactly so
-    // the contract suite can assert one string against both implementations.
+    // Deliberately vague, and worded identically to the mock provider so the
+    // contract suite can assert one string against both implementations.
     if (error || !data.user) return err("Email or password is incorrect");
 
     return ok({ id: data.user.id, email: data.user.email ?? parsed.data.email });
@@ -164,9 +204,7 @@ export const supabaseProvider: DataProvider = {
   async updatePassword(nextPassword): Promise<Result<void>> {
     const parsed = passwordSchema.safeParse(nextPassword);
     if (!parsed.success) {
-      return err("Check the details below", {
-        password: parsed.error.issues[0].message,
-      });
+      return err("Check the details below", { password: parsed.error.issues[0].message });
     }
 
     const supabase = await createClient();
@@ -204,12 +242,12 @@ export const supabaseProvider: DataProvider = {
       builder = builder.or(`title.ilike.%${needle}%,brief.ilike.%${needle}%`);
     }
 
-    if (query.stages?.length) {
-      builder = builder.in("stage", query.stages);
+    if (query.statuses?.length) {
+      builder = builder.in("status", query.statuses);
     }
 
-    // Null deadlines sort last in both directions — "whenever" is never the
-    // most urgent thing on the list. Mirrors the mock provider's comparator.
+    // Null deadlines sort last in both directions, mirroring the mock's
+    // comparator.
     switch (query.sort ?? "created_desc") {
       case "created_asc":
         builder = builder.order("created_at", { ascending: true });
@@ -233,9 +271,12 @@ export const supabaseProvider: DataProvider = {
     const { data, count, error } = await builder.range(from, from + perPage - 1);
     if (error) throw new Error(`Could not load orders: ${error.message}`);
 
+    // Deliberately no signed URLs here. Minting one per row would mean a
+    // storage round trip for every list render, and nothing on a list view
+    // downloads a file — the detail page does that.
     const total = count ?? 0;
     return {
-      rows: (data ?? []).map((row) => toOrder(row as OrderRow)),
+      rows: (data ?? []).map((row) => toOrder(row as OrderRow, null)),
       total,
       page,
       perPage,
@@ -259,9 +300,53 @@ export const supabaseProvider: DataProvider = {
 
     // Another user's id returns no row rather than an error — RLS makes it
     // invisible, so "not yours" and "does not exist" are indistinguishable.
-    // That is the correct behaviour: it leaks nothing about what exists.
-    if (error) return null;
-    return data ? toOrder(data as OrderRow) : null;
+    // That is correct: it leaks nothing about what exists.
+    if (error || !data) return null;
+
+    const row = data as OrderRow;
+    let deliverable: Deliverable | null = null;
+
+    if (row.deliverable?.path) {
+      // The bucket is private. A short-lived signed URL means the download link
+      // cannot be forwarded to someone who is not entitled to the file.
+      const { data: signed } = await supabase.storage
+        .from(DELIVERABLES_BUCKET)
+        .createSignedUrl(row.deliverable.path, SIGNED_URL_TTL_SECONDS);
+      if (signed?.signedUrl) {
+        deliverable = {
+          filename: row.deliverable.filename,
+          url: signed.signedUrl,
+          uploadedAt: row.deliverable.uploadedAt,
+        };
+      }
+    }
+
+    return toOrder(row, deliverable);
+  },
+
+  async getOrderEvents(orderId): Promise<OrderEvent[]> {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return [];
+
+    // RLS on order_events checks ownership through the parent order, so an
+    // unowned id returns an empty list rather than leaking its existence.
+    const { data, error } = await supabase
+      .from("order_events")
+      .select("*")
+      .eq("order_id", orderId)
+      .order("created_at", { ascending: false });
+
+    if (error) return [];
+    return (data ?? []).map((row) => ({
+      id: row.id as string,
+      orderId: row.order_id as string,
+      kind: row.kind as OrderEvent["kind"],
+      label: row.label as string,
+      createdAt: row.created_at as string,
+    }));
   },
 
   async createOrder(input: NewOrderInput): Promise<Result<Order>> {
@@ -282,18 +367,115 @@ export const supabaseProvider: DataProvider = {
         user_id: user.id,
         title: parsed.data.title,
         brief: parsed.data.brief,
+        keywords: parsed.data.keywords,
+        format: parsed.data.format,
         word_count: parsed.data.wordCount,
         deadline: parsed.data.deadline,
-        // Stated explicitly even though the column defaults to it: the INSERT
-        // policy's WITH CHECK clause requires this exact value, so a client
-        // cannot create an order that is already marked delivered.
-        stage: INITIAL_STAGE,
+        // `status`, `priority`, `assignees`, `deliverable` and `order_number`
+        // are deliberately absent. A column-level INSERT grant means the
+        // authenticated role cannot even name them, so naming them here would
+        // make the insert fail. Column defaults and the sequence fill them in,
+        // and the INSERT policy's WITH CHECK re-asserts status = 'draft'.
       })
       .select()
       .single();
 
     if (error) return err(`Could not create that order: ${error.message}`);
-    return ok(toOrder(data as OrderRow));
+    return ok(toOrder(data as OrderRow, null));
+  },
+
+  // -------------------------------------------------------------------------
+  // Dashboard
+  // -------------------------------------------------------------------------
+
+  async getDashboardStats(): Promise<DashboardStats> {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return computeDashboardStats([], []);
+
+    // One client's order history is small — tens of rows, not thousands — so
+    // counting in the application is cheaper than seven round trips for seven
+    // monthly buckets. Revisit if an account ever grows past a few hundred.
+    const { data: orders, error } = await supabase
+      .from("orders")
+      .select("*")
+      .eq("user_id", user.id);
+    if (error) throw new Error(`Could not load dashboard: ${error.message}`);
+
+    const { data: delivered } = await supabase
+      .from("order_events")
+      .select("created_at")
+      .eq("kind", "delivered");
+
+    return computeDashboardStats(
+      (orders ?? []).map((row) => toOrder(row as OrderRow, null)),
+      (delivered ?? []).map((e) => e.created_at as string),
+    );
+  },
+
+  // -------------------------------------------------------------------------
+  // Notifications
+  // -------------------------------------------------------------------------
+
+  async listNotifications(): Promise<Notification[]> {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return [];
+
+    const { data, error } = await supabase
+      .from("notifications")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (error) return [];
+    return (data ?? []).map((row) => ({
+      id: row.id as string,
+      kind: row.kind as Notification["kind"],
+      title: row.title as string,
+      orderId: (row.order_id as string | null) ?? null,
+      createdAt: row.created_at as string,
+      readAt: (row.read_at as string | null) ?? null,
+    }));
+  },
+
+  async unreadNotificationCount(): Promise<number> {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return 0;
+
+    const { count } = await supabase
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .is("read_at", null);
+
+    return count ?? 0;
+  },
+
+  async markAllNotificationsRead(): Promise<Result<void>> {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return err(NOT_SIGNED_IN);
+
+    // `read_at` is the only column a client may update on this table — enforced
+    // by a column-level grant, not just by the row policy.
+    const { error } = await supabase
+      .from("notifications")
+      .update({ read_at: new Date().toISOString() })
+      .eq("user_id", user.id)
+      .is("read_at", null);
+
+    if (error) return err(`Could not update your notifications: ${error.message}`);
+    return ok(undefined);
   },
 
   // -------------------------------------------------------------------------
@@ -333,9 +515,7 @@ export const supabaseProvider: DataProvider = {
     if (parsed.data.fullName !== undefined) update.full_name = parsed.data.fullName;
     if (parsed.data.company !== undefined) update.company = parsed.data.company;
     if (parsed.data.avatarUrl !== undefined) update.avatar_url = parsed.data.avatarUrl;
-    if (parsed.data.preferences !== undefined) {
-      update.preferences = parsed.data.preferences;
-    }
+    if (parsed.data.preferences !== undefined) update.preferences = parsed.data.preferences;
 
     const { data, error } = await supabase
       .from("profiles")

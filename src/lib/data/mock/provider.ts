@@ -1,10 +1,10 @@
 /**
  * Mock implementation of DataProvider — cookie-backed, no database.
  *
- * It implements the full query contract (search, stage filter, sort,
+ * It implements the full query contract (search, status filter, sort,
  * pagination) rather than returning everything and letting pages filter in
- * memory. That is the whole point: if the mock were loose here, swapping to
- * Supabase would change behaviour and the "one switch" promise would be false.
+ * memory. If the mock were loose here, swapping to Supabase would change
+ * behaviour and the "one switch" promise would be false.
  *
  * Demo fixture, not a security boundary — see state.ts.
  */
@@ -13,9 +13,12 @@ import {
   DEFAULT_PER_PAGE,
   err,
   ok,
+  type DashboardStats,
   type DataProvider,
   type NewOrderInput,
+  type Notification,
   type Order,
+  type OrderEvent,
   type OrderQuery,
   type Page,
   type Profile,
@@ -32,10 +35,11 @@ import {
   passwordSchema,
   profilePatchSchema,
 } from "../schemas";
-import { INITIAL_STAGE } from "@/lib/orders/stages";
+import { DEFAULT_PRIORITY, INITIAL_STATUS } from "@/lib/orders/statuses";
+import { computeDashboardStats } from "@/lib/orders/stats";
 import { hashPassword, type MockState } from "./state";
 import { readState, writeState } from "./store";
-import { seedOrders } from "./seed";
+import { seedEvents, seedNotifications, seedOrders } from "./seed";
 import { applyOrderQuery } from "./query";
 
 const NOT_SIGNED_IN = "You need to be signed in to do that";
@@ -43,6 +47,32 @@ const NOT_SIGNED_IN = "You need to be signed in to do that";
 /** Seeded demo orders plus anything the user has created, newest last. */
 function allOrders(state: MockState): Order[] {
   return [...seedOrders(state.user.id), ...state.orders];
+}
+
+/**
+ * Events for user-created orders are synthesised rather than stored: a client
+ * can only ever create an order, so its history is always exactly one entry.
+ */
+function allEvents(state: MockState): OrderEvent[] {
+  const own: OrderEvent[] = state.orders.map((o) => ({
+    id: `${o.id}-submitted`,
+    orderId: o.id,
+    kind: "submitted",
+    label: "Order submitted",
+    createdAt: o.createdAt,
+  }));
+  return [...seedEvents(state.user.id), ...own].sort((a, b) =>
+    a.createdAt < b.createdAt ? 1 : -1,
+  );
+}
+
+function allNotifications(state: MockState): Notification[] {
+  const readAt = state.notificationsReadAt;
+  return seedNotifications(state.user.id).map((n) =>
+    n.readAt === null && readAt !== null && n.createdAt <= readAt
+      ? { ...n, readAt }
+      : n,
+  );
 }
 
 function newState(email: string, passwordHash: string): MockState {
@@ -56,6 +86,7 @@ function newState(email: string, passwordHash: string): MockState {
       createdAt: new Date().toISOString(),
     },
     orders: [],
+    notificationsReadAt: null,
     authenticated: true,
   };
 }
@@ -98,10 +129,7 @@ export const mockProvider: DataProvider = {
       });
     }
 
-    const state = newState(
-      parsed.data.email,
-      await hashPassword(parsed.data.password),
-    );
+    const state = newState(parsed.data.email, await hashPassword(parsed.data.password));
     await writeState(state);
     return ok({ id: state.user.id, email: state.user.email });
   },
@@ -142,9 +170,7 @@ export const mockProvider: DataProvider = {
 
     const parsed = passwordSchema.safeParse(nextPassword);
     if (!parsed.success) {
-      return err("Check the details below", {
-        password: parsed.error.issues[0].message,
-      });
+      return err("Check the details below", { password: parsed.error.issues[0].message });
     }
 
     await writeState({
@@ -165,8 +191,6 @@ export const mockProvider: DataProvider = {
       const perPage = Math.min(100, Math.max(1, query.perPage ?? DEFAULT_PER_PAGE));
       return { rows: [], total: 0, page, perPage, pageCount: 0 };
     }
-    // Filtering/sorting/pagination live in a pure module so their semantics can
-    // be tested directly against the behaviour Postgres gives us.
     return applyOrderQuery(allOrders(state), query);
   },
 
@@ -178,6 +202,15 @@ export const mockProvider: DataProvider = {
     return allOrders(state).find((o) => o.id === id) ?? null;
   },
 
+  async getOrderEvents(orderId): Promise<OrderEvent[]> {
+    const state = await currentState();
+    if (!state) return [];
+    // Check ownership first: an unowned id must return nothing rather than
+    // leaking that the order exists.
+    if (!allOrders(state).some((o) => o.id === orderId)) return [];
+    return allEvents(state).filter((e) => e.orderId === orderId);
+  },
+
   async createOrder(input: NewOrderInput): Promise<Result<Order>> {
     const state = await currentState();
     if (!state) return err(NOT_SIGNED_IN);
@@ -187,23 +220,65 @@ export const mockProvider: DataProvider = {
       return err("Check the details below", fieldErrorsFrom(parsed.error));
     }
 
+    const existing = allOrders(state);
     const now = new Date().toISOString();
     const order: Order = {
       id: crypto.randomUUID(),
+      orderNumber: Math.max(...existing.map((o) => o.orderNumber), 1000) + 1,
       userId: state.user.id,
       title: parsed.data.title,
       brief: parsed.data.brief,
+      keywords: parsed.data.keywords,
+      format: parsed.data.format,
       wordCount: parsed.data.wordCount,
       deadline: parsed.data.deadline,
-      // Clients never choose the stage. Postgres enforces the same rule with a
-      // WITH CHECK clause on the INSERT policy.
-      stage: INITIAL_STAGE,
+      // Clients choose none of the next three. Postgres enforces the same rule
+      // with a WITH CHECK clause on the INSERT policy.
+      status: INITIAL_STATUS,
+      priority: DEFAULT_PRIORITY,
+      assignees: [],
+      deliverable: null,
       createdAt: now,
       updatedAt: now,
     };
 
     await writeState({ ...state, orders: [...state.orders, order] });
     return ok(order);
+  },
+
+  // -------------------------------------------------------------------------
+  // Dashboard
+  // -------------------------------------------------------------------------
+
+  async getDashboardStats(): Promise<DashboardStats> {
+    const state = await currentState();
+    if (!state) return computeDashboardStats([], []);
+    const delivered = allEvents(state)
+      .filter((e) => e.kind === "delivered")
+      .map((e) => e.createdAt);
+    return computeDashboardStats(allOrders(state), delivered);
+  },
+
+  // -------------------------------------------------------------------------
+  // Notifications
+  // -------------------------------------------------------------------------
+
+  async listNotifications(): Promise<Notification[]> {
+    const state = await currentState();
+    return state ? allNotifications(state) : [];
+  },
+
+  async unreadNotificationCount(): Promise<number> {
+    const state = await currentState();
+    if (!state) return 0;
+    return allNotifications(state).filter((n) => n.readAt === null).length;
+  },
+
+  async markAllNotificationsRead(): Promise<Result<void>> {
+    const state = await currentState();
+    if (!state) return err(NOT_SIGNED_IN);
+    await writeState({ ...state, notificationsReadAt: new Date().toISOString() });
+    return ok(undefined);
   },
 
   // -------------------------------------------------------------------------

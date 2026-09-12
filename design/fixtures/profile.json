@@ -12,9 +12,9 @@
     },
     "orderDefaults": {
       "wordCount": 1500,
-      "tone": "Direct, no filler",
-      "audience": "Technical decision-makers at mid-size SaaS companies"
+      "format": "blog_post",
+      "tone": "Direct, no filler"
     }
   },
-  "createdAt": "2026-06-02T09:14:00.000Z"
+  "createdAt": "2026-03-10T14:55:51.732Z"
 }

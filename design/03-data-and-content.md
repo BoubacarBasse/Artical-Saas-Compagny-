@@ -5,101 +5,123 @@ anything you put in a mockup can be the real thing.
 
 ---
 
-## What the data can and cannot support
+## Statuses
 
-**Read this before designing the dashboard or the order detail page.**
+Five flat badges. **No progress bars, no percentages** — the reference uses a badge and so does the
+data model. Fewer states also means less for staff to keep accurate by hand.
 
-An order stores its **current stage and nothing about how it got there.** There is no history
-table, no per-stage timestamp, no record of when it moved. Two natural designs are therefore not
-buildable:
+| Status | Badge | Terminal | Order-content panel says |
+|---|---|---|---|
+| `draft` | Draft | no | "This order is still a draft" / not submitted yet, no writer has picked it up |
+| `in_progress` | In progress | no | "Content is being written" / your writer is working on this piece, you'll be notified when it's ready for review |
+| `pending_review` | Pending review | no | "Ready for your review" / the draft is finished and waiting for you |
+| `completed` | Completed | yes | "This order is complete" / the finished piece is available to download |
+| `cancelled` | Cancelled | yes | "This order was cancelled" / no further work will happen |
 
-- ❌ **A timeline with a date beside each stage.** "Brief received — 2 Sep · Writing — 5 Sep · …"
-  We cannot fill those dates in. Stages can be shown as **done / current / upcoming**, which is
-  fully supported — just not *when* each transition happened.
-- ❌ **Anything averaging or trending over time.** Turnaround time, on-time rate, "faster than last
-  month", a chart of throughput. None of it is derivable.
-
-### Available on every order
-`title` · `brief` · `wordCount` · `deadline` (may be null) · `stage` · `createdAt` · `updatedAt`
-
-`updatedAt` changes whenever staff touch the row, so "last updated 2 days ago" is real. It is not
-the same as "entered this stage 2 days ago" — it is any edit — so word it loosely if you use it.
-
-### Derivable for a dashboard
-Total orders · count per stage · active (in flight) vs finished · the next upcoming deadline ·
-how many orders are past their deadline and not finished · total words on delivered orders ·
-newest order · oldest in-flight order.
-
-### Not available
-Per-stage timestamps · turnaround or cycle time · on-time percentage · any historical trend ·
-writer identity · revision or draft count · message threads · attachments or the finished article
-itself · invoices, spend or plan.
-
-If a screen wants one of these, say so — several are cheap to add. Do not design around the gap.
+- **Every new order starts as `draft`.** Enforced in the database; a client cannot create an order
+  in any other status.
+- **`cancelled` is not an error.** It is a normal terminal state.
+- **Clients cannot change a status.** There is no control for it anywhere.
 
 ---
 
-## The pipeline
+## Fields on an order
 
-Six stages. Five form the happy path; `cancelled` sits outside it.
+| Field | Type | Notes |
+|---|---|---|
+| `orderNumber` | integer | Shown as "Order #1024". From a database sequence, never reused |
+| `title` | text | 3–120 characters |
+| `brief` | text | 10–5000 characters |
+| `keywords` | text[] | 0–10, lowercased, de-duplicated. Entered as one comma-separated field |
+| `format` | enum | Blog post · Whitepaper · Case study · Newsletter · Landing page |
+| `wordCount` | integer | 100–10000 |
+| `deadline` | date or null | `YYYY-MM-DD`; optional — an empty input stores null |
+| `status` | enum | The five above. Staff-set |
+| `priority` | enum | Low · Medium · High. **Staff-set, client-readable.** Defaults to Medium |
+| `assignees` | array | `{ name, avatarUrl }`. May be empty. Staff-set |
+| `deliverable` | object or null | `{ filename, url, uploadedAt }`. Null until the work is delivered |
+| `createdAt` / `updatedAt` | timestamp | System-managed |
 
-| Stage | Label shown to client | Progress | Step | Client-facing description |
-|---|---|---|---|---|
-| `brief_received` | Brief received | 10% | 1 | We have your brief and it is queued for a writer. |
-| `writing` | Writing | 40% | 2 | A writer is working on the first draft. |
-| `editing` | Editing | 65% | 3 | The draft is with an editor for revisions. |
-| `review` | Final review | 85% | 4 | Final quality check before delivery. |
-| `delivered` | Delivered | 100% | 5 | This article is finished and delivered. |
-| `cancelled` | Cancelled | 0% | — | This order was cancelled. |
+**On avatars:** `avatarUrl` is null throughout the fixtures, so the design needs an initials
+fallback. Do not assume a photo is always there.
 
-Notes that affect the design:
+**On priority:** it is deliberately not client-editable. If clients could set it, every order would
+be High. It tells the client how the work has been triaged; it is not a queue-jump control.
 
-- **Every new order starts at `brief_received`.** Enforced in the database; a client cannot create
-  an order in any other stage.
-- **`delivered` and `cancelled` are terminal.** Everything else is "in flight".
-- **`cancelled` is not a failure.** It is outside the pipeline, not partway along it, and it is not
-  an error state. Progress is 0%, not "stuck at 40%".
-- The percentages above are the real numbers the progress indicator will receive.
+## Fields on the profile
+
+`email` (read-only in the UI) · `fullName` · `company` · `avatarUrl` · notification toggles
+(status change, delivered, weekly summary) · order defaults (word count, format, tone). All the
+optional ones may be null.
+
+Password: minimum 8 characters, with a confirmation that must match.
 
 ---
 
-## Fields and limits
+## Order history
 
-### Order
+Every order has an append-only list of events, newest first. This is what the detail-page timeline
+renders, and it carries **real timestamps**:
 
-| Field | Type | Limits |
-|---|---|---|
-| `title` | text | 3–120 characters, trimmed |
-| `brief` | text | 10–5000 characters, trimmed |
-| `wordCount` | integer | 100–10000, whole numbers only |
-| `deadline` | date or null | `YYYY-MM-DD`; optional — an empty input is stored as null |
-| `stage` | enum | one of the six above; set by staff, never by the client |
-| `createdAt` / `updatedAt` | timestamp | system-managed |
+- `submitted` — "Order submitted"
+- `status_changed` — "Status changed to in progress"
+- `delivered` — "Delivered Customer_Success_Story_Final.docx"
+- `cancelled` — "Order cancelled"
 
-### Profile and settings
+A draft has exactly one event. A completed order has four or five. The fixtures in
+`order-events.json` are generated from each order's status, so a timeline can never contradict its
+badge — and your artboards shouldn't either.
 
-| Field | Type | Limits |
-|---|---|---|
-| `email` | text | read-only in the UI |
-| `fullName` | text or null | up to 120 characters |
-| `company` | text or null | up to 120 characters |
-| `avatarUrl` | URL or null | must be a valid URL |
-| `notifications.statusChange` | boolean | default on |
-| `notifications.delivered` | boolean | default on |
-| `notifications.weeklySummary` | boolean | default off |
-| `orderDefaults.wordCount` | integer or null | 100–10000 when set |
-| `orderDefaults.tone` | text or null | up to 80 characters |
-| `orderDefaults.audience` | text or null | up to 160 characters |
+---
 
-Order defaults pre-fill the new-order form for repeat clients. Nothing enforces them.
+## The dashboard
 
-Password: minimum 8 characters, with a confirmation field that must match.
+### Stat counts
+Total · Draft · In progress · Pending review · Completed · Cancelled · Overdue · Next deadline.
+
+*Overdue* means the deadline has passed **and** the order is not finished. A completed order past
+its deadline is not overdue — nobody is waiting on it.
+
+### The completion chart
+
+Completions per calendar month for the last seven months, oldest first, **including months with
+none**.
+
+The real series, from `fixtures/dashboard.json`:
+
+```
+Mar 1   Apr 2   May 1   Jun 1   Jul 2   Aug 2   Sep 0
+```
+
+That is the honest scale. One client of a writing agency finishes one to three pieces a month and
+has quiet months. A chart designed against hundreds looks impressive in a screenshot and then breaks
+the first time it meets a real account — so please design the axis, the labels and the empty month
+for these numbers.
+
+The September zero is not a bug. It is the current month, partly elapsed. The design has to survive
+a trailing zero without looking broken.
+
+---
+
+## Notifications
+
+`{ kind, title, orderId, createdAt, readAt }` where kind is `order_update`, `order_complete` or
+`system`. `readAt` null means unread.
+
+Real examples from the fixtures:
+- "Your order 'SaaS Growth Guide' is now in progress" — unread
+- "Order 'Q3 newsletter' is ready for your review" — unread
+- "Order 'Integrations launch announcement' marked as complete" — read
+- "Welcome to Article Orders" — read
+
+Two of five are unread, so the nav needs an unread indicator and the list needs a read/unread
+distinction. The only action is **Mark all as read**.
 
 ---
 
 ## Real error messages
 
-Use these verbatim in error-state artboards. They already exist in the code.
+Use these verbatim in error-state artboards.
 
 **Form validation**
 - `Enter a valid email address`
@@ -109,18 +131,21 @@ Use these verbatim in error-state artboards. They already exist in the code.
 - `Title must be 120 characters or fewer`
 - `Tell us a little more about what you need (10 characters minimum)`
 - `Brief must be 5000 characters or fewer`
+- `Choose a format`
 - `Enter a word count`
 - `Word count must be a whole number`
 - `Minimum order is 100 words`
 - `For more than 10,000 words, please contact us directly`
+- `Use 10 keywords or fewer`
+- `Each keyword must be 60 characters or fewer`
 - `Enter a valid date`
 - `Enter a valid URL`
 
 **Whole-form and auth**
-- `Check the details below` — shown above a form when one or more fields failed
-- `Email or password is incorrect` — sign-in failure. Deliberately vague, and deliberately the
-  same whether the email exists or not. Do not split it into "no such account" / "wrong password".
-- `An account with that email already exists` — sign-up with a taken address
+- `Check the details below` — above a form when one or more fields failed
+- `Email or password is incorrect` — sign-in failure. Deliberately vague, and the same whether or
+  not the email exists. Do not split it into "no such account" / "wrong password"
+- `An account with that email already exists`
 - `You need to be signed in to do that`
 
 ---
@@ -128,39 +153,59 @@ Use these verbatim in error-state artboards. They already exist in the code.
 ## List controls
 
 **Sort** — newest first (default) · oldest first · deadline soonest · deadline latest · title A–Z.
+Orders with no deadline sort **last in both deadline directions**: "whenever you can" is neither the
+most nor the least urgent thing, it is simply not on the schedule.
 
-Orders with no deadline sort **last in both deadline directions**. "Whenever you can" is neither
-the most nor the least urgent thing on the list; it is simply not on the schedule.
+**Filter** — by status, multi-select, any combination of the five.
 
-**Filter** — by stage, multi-select, any combination of the six. No filter means all.
+**Search** — free text against title and brief.
 
-**Search** — free text, matched against title and brief.
-
-**Pagination** — 10 per page by default. The total count is always known, so "showing 1–10 of 34"
-is available.
+**Pagination** — 10 per page. The total is always known, so "showing 1–10 of 13" is available.
 
 ---
 
 ## The sample records
 
-`fixtures/orders.json` — five real orders, one in each pipeline stage, with real titles and briefs
-already written. These are the same records the running app shows in demo mode. Please use them.
+| File | What it holds |
+|---|---|
+| `orders.json` | 13 orders over 7 months: 9 completed, 1 in progress, 1 pending review, 1 draft, 1 cancelled |
+| `order-events.json` | 53 timeline entries for those orders |
+| `notifications.json` | 5 items, the 2 newest unread |
+| `dashboard.json` | The exact counts and chart series the app computes from the above |
+| `profile.json` | A client with a name, company and non-default preferences |
+| `edge-cases.json` | 11 records that break layouts |
 
-`fixtures/profile.json` — a client with a name, a company, and non-default preferences set.
+These are the same records the running app shows in demo mode. Please use them.
 
-`fixtures/edge-cases.json` — eight records that break layouts:
+### Edge cases worth drawing
 
 | id | What it tests |
 |---|---|
 | `edge-max-title` | Title at exactly 120 characters |
 | `edge-min-title` | Title at 3 characters |
-| `edge-overdue` | Deadline in the past, still in flight |
+| `edge-overdue` | Deadline passed, still in flight — none of the 13 samples is overdue |
 | `edge-no-deadline` | Null deadline |
 | `edge-cancelled` | The cancelled treatment |
-| `edge-max-words` | 10,000 words — widest number |
-| `edge-min-words` | 100 words |
-| `edge-long-brief` | A brief long enough to dominate the detail page |
+| `edge-max-words` / `edge-min-words` | 10,000 and 100 — the widest and narrowest numbers |
+| `edge-long-brief` | A brief that dominates the detail page |
+| `edge-max-keywords` | Ten keywords that have to wrap |
+| `edge-many-assignees` | Four writers — the avatar stack needs an overflow rule |
+| `edge-long-filename` | A deliverable filename long enough to need truncating |
 
-**None of the five sample orders is currently overdue**, which is why `edge-overdue` exists. An
-order is overdue when its deadline has passed and its stage is not terminal, and that needs a
-visibly different treatment from an order that is merely close to its deadline.
+---
+
+## What the data cannot support
+
+Short list, but worth checking before you design a panel around one of these:
+
+- **Writer profiles.** An assignee is a name and an optional avatar. No bio, no workload, no
+  contact route, nothing to click through to.
+- **Anything per-status duration.** Events carry timestamps, so "when did it enter review" is
+  answerable, but there is no stored cycle time, on-time rate or SLA.
+- **Client uploads.** Files move one way: staff upload, client downloads. There is no attachment on
+  a brief.
+- **Revisions or drafts.** One deliverable per order, replaced in place. No version history.
+- **Messaging.** No comments, no thread, no reply-to-writer.
+- **Anything financial.** No price, plan, invoice or spend.
+
+If a screen wants one of these, say so — several are cheap to add.

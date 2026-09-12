@@ -1,24 +1,17 @@
 /**
  * Filtering, sorting and pagination for the mock provider.
  *
- * Pure on purpose. Two reasons:
- *
- *  1. These semantics have to match what Postgres does in the Supabase
- *     provider. If they drift, the "one switch" promise quietly breaks — an
- *     order sorts differently, a search misses a row — and nothing fails
- *     loudly. Pure code means the semantics can be asserted directly in tests
- *     rather than only through a browser.
- *
- *  2. It keeps the provider itself thin: read cookie, apply query, done.
+ * Pure on purpose. These semantics have to match what Postgres does in the
+ * Supabase provider; if they drift, the "one switch" promise quietly breaks and
+ * nothing fails loudly. Pure code means they can be asserted directly.
  */
 
 import { DEFAULT_PER_PAGE, type Order, type OrderQuery, type Page } from "../types";
 
 /**
- * Null deadlines sort last in BOTH directions. "Whenever you can" is never the
- * most urgent thing on the list, and it is not the least urgent either — it is
- * simply not on the schedule. Mirrors `nullsFirst: false` in the Supabase
- * provider's deadline ordering.
+ * Null deadlines sort last in BOTH directions. "Whenever you can" is neither
+ * the most urgent thing on the list nor the least — it is simply not on the
+ * schedule. Mirrors `nullsFirst: false` in the Supabase provider.
  */
 function compareDeadline(a: Order, b: Order, direction: 1 | -1): number {
   if (a.deadline === b.deadline) return 0;
@@ -48,10 +41,10 @@ export function applyOrderQuery(orders: Order[], query: OrderQuery = {}): Page<O
   }
 
   // An empty array means "no filter", matching `.in()` only being applied when
-  // stages are actually supplied.
-  if (query.stages?.length) {
-    const wanted = new Set(query.stages);
-    rows = rows.filter((o) => wanted.has(o.stage));
+  // statuses are actually supplied.
+  if (query.statuses?.length) {
+    const wanted = new Set(query.statuses);
+    rows = rows.filter((o) => wanted.has(o.status));
   }
 
   const sort = query.sort ?? "created_desc";

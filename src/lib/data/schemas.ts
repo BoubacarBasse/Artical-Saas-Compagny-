@@ -2,19 +2,14 @@
  * Validation at the app boundary.
  *
  * Every untrusted input crosses one of these schemas before it reaches a
- * provider: form submissions, URL search params, and — importantly — the
- * `preferences` jsonb column coming back out of Postgres. That column is
- * schemaless by design, so it is only safe because it is parsed here on the way
- * in *and* on the way out.
+ * provider: form submissions, URL search params, and the `preferences` jsonb
+ * column coming back out of Postgres. That column is schemaless by design, so
+ * it is only safe because it is parsed here on the way in *and* on the way out.
  */
 
 import { z } from "zod";
-import { ORDER_STAGES } from "@/lib/orders/stages";
-import {
-  DEFAULT_PER_PAGE,
-  ORDER_SORTS,
-  type Preferences,
-} from "./types";
+import { ORDER_FORMATS, ORDER_STATUSES } from "@/lib/orders/statuses";
+import { DEFAULT_PER_PAGE, ORDER_SORTS, type Preferences } from "./types";
 
 // ---------------------------------------------------------------------------
 // Credentials
@@ -53,6 +48,23 @@ const optionalDate = z
     message: "Enter a valid date",
   });
 
+/**
+ * Keywords arrive as one comma-separated field, which is how the brief shows
+ * them ("saas retention, churn rate"). Split, trim, drop blanks, de-duplicate.
+ */
+export const keywordsSchema = z
+  .union([z.string(), z.array(z.string()), z.null(), z.undefined()])
+  .transform((v) => {
+    if (v === null || v === undefined) return [];
+    const parts = Array.isArray(v) ? v : v.split(",");
+    const cleaned = parts.map((s) => s.trim().toLowerCase()).filter(Boolean);
+    return [...new Set(cleaned)];
+  })
+  .refine((v) => v.length <= 10, { message: "Use 10 keywords or fewer" })
+  .refine((v) => v.every((k) => k.length <= 60), {
+    message: "Each keyword must be 60 characters or fewer",
+  });
+
 export const newOrderSchema = z.object({
   title: z
     .string()
@@ -64,6 +76,8 @@ export const newOrderSchema = z.object({
     .trim()
     .min(10, "Tell us a little more about what you need (10 characters minimum)")
     .max(5000, "Brief must be 5000 characters or fewer"),
+  keywords: keywordsSchema,
+  format: z.enum(ORDER_FORMATS, { error: "Choose a format" }),
   wordCount: z
     .number({ error: "Enter a word count" })
     .int("Word count must be a whole number")
@@ -73,36 +87,36 @@ export const newOrderSchema = z.object({
 });
 
 /**
- * Note there is no schema for changing an order's stage, and no provider method
- * that would accept one. Clients cannot move their own orders through the
- * pipeline — that is staff-only work, enforced in Postgres by the absence of an
- * UPDATE policy on `orders`.
+ * There is deliberately no schema for changing an order's status, priority or
+ * assignees, and no provider method that would accept one. Those are staff
+ * fields. Postgres enforces the same rule: `orders` has no client UPDATE policy
+ * at all, and the INSERT policy pins the opening status.
  */
 
 // ---------------------------------------------------------------------------
 // Query parsing
 // ---------------------------------------------------------------------------
 
-const stageList = z
+const statusList = z
   .union([z.string(), z.array(z.string())])
   .transform((v) => (Array.isArray(v) ? v : v.split(",")))
   .transform((v) =>
     v
       .map((s) => s.trim())
-      .filter((s): s is (typeof ORDER_STAGES)[number] =>
-        (ORDER_STAGES as readonly string[]).includes(s),
+      .filter((s): s is (typeof ORDER_STATUSES)[number] =>
+        (ORDER_STATUSES as readonly string[]).includes(s),
       ),
   );
 
 export const orderQuerySchema = z.object({
   search: z.string().trim().max(200).optional(),
-  stages: stageList.optional(),
+  statuses: statusList.optional(),
   sort: z.enum(ORDER_SORTS).optional(),
   page: z.coerce.number().int().min(1).optional(),
   perPage: z.coerce.number().int().min(1).max(100).optional(),
 });
 
-/** Turn `?search=x&stages=writing,review&page=2` into a typed OrderQuery. */
+/** Turn `?search=x&statuses=in_progress,completed&page=2` into an OrderQuery. */
 export function parseOrderQuery(
   params: URLSearchParams | Record<string, string | string[] | undefined>,
 ) {
@@ -111,9 +125,7 @@ export function parseOrderQuery(
       ? Object.fromEntries(params.entries())
       : params;
   const parsed = orderQuerySchema.safeParse(raw);
-  return parsed.success
-    ? parsed.data
-    : { page: 1, perPage: DEFAULT_PER_PAGE };
+  return parsed.success ? parsed.data : { page: 1, perPage: DEFAULT_PER_PAGE };
 }
 
 // ---------------------------------------------------------------------------
@@ -128,8 +140,8 @@ export const DEFAULT_PREFERENCES: Preferences = {
   },
   orderDefaults: {
     wordCount: null,
+    format: null,
     tone: null,
-    audience: null,
   },
 };
 
@@ -149,8 +161,8 @@ export const preferencesSchema = z.object({
   orderDefaults: z
     .object({
       wordCount: z.number().int().min(100).max(10000).nullable().default(null),
+      format: z.enum(ORDER_FORMATS).nullable().default(null),
       tone: z.string().trim().max(80).nullable().default(null),
-      audience: z.string().trim().max(160).nullable().default(null),
     })
     .default(DEFAULT_PREFERENCES.orderDefaults),
 });

@@ -1,57 +1,367 @@
 [
   {
-    "id": "8f14e45f-seed-1",
-    "userId": "8f14e45f-ceea-467a-9f7c-3b2a1d4e5f60",
-    "title": "10 ways small teams can cut cloud spend",
-    "brief": "Practical, tactics-first listicle aimed at engineering leads at companies under 50 people. Cite real pricing where possible. Friendly but not jokey.",
-    "wordCount": 1200,
-    "deadline": "2026-09-02",
-    "stage": "delivered",
-    "createdAt": "2026-08-19T13:41:49.001Z",
-    "updatedAt": "2026-08-21T13:41:49.001Z"
-  },
-  {
-    "id": "8f14e45f-seed-2",
-    "userId": "8f14e45f-ceea-467a-9f7c-3b2a1d4e5f60",
-    "title": "What actually changed in the 2026 accessibility rules",
-    "brief": "Explainer for product managers who are not lawyers. Lead with what they have to do differently, not with the history of the legislation.",
-    "wordCount": 1600,
-    "deadline": "2026-09-15",
-    "stage": "review",
-    "createdAt": "2026-09-01T13:41:49.001Z",
-    "updatedAt": "2026-09-03T13:41:49.001Z"
-  },
-  {
-    "id": "8f14e45f-seed-3",
-    "userId": "8f14e45f-ceea-467a-9f7c-3b2a1d4e5f60",
-    "title": "Case study: migrating a 12-year-old Rails monolith",
-    "brief": "Long-form narrative piece. Interview notes will follow. Technical audience, so do not over-explain the basics.",
-    "wordCount": 2400,
-    "deadline": "2026-09-18",
-    "stage": "editing",
-    "createdAt": "2026-09-04T13:41:49.001Z",
-    "updatedAt": "2026-09-06T13:41:49.001Z"
-  },
-  {
-    "id": "8f14e45f-seed-4",
+    "id": "8f14e45f-order-1012",
+    "orderNumber": 1012,
     "userId": "8f14e45f-ceea-467a-9f7c-3b2a1d4e5f60",
     "title": "Why your onboarding email sequence is too long",
     "brief": "Opinionated take with a clear argument. Growth and lifecycle marketers. Include one worked example of a five-email sequence cut to three.",
+    "keywords": [
+      "onboarding",
+      "lifecycle email"
+    ],
+    "format": "blog_post",
     "wordCount": 900,
-    "deadline": "2026-09-21",
-    "stage": "writing",
-    "createdAt": "2026-09-08T13:41:49.001Z",
-    "updatedAt": "2026-09-10T13:41:49.001Z"
+    "deadline": "2026-03-24",
+    "status": "completed",
+    "priority": "medium",
+    "assignees": [
+      {
+        "name": "Mara Lindqvist",
+        "avatarUrl": null
+      }
+    ],
+    "deliverable": {
+      "filename": "Onboarding_Sequence_Final.docx",
+      "url": "#demo-download-unavailable",
+      "uploadedAt": "2026-03-22T14:55:51.732Z"
+    },
+    "createdAt": "2026-03-10T14:55:51.732Z",
+    "updatedAt": "2026-03-22T14:55:51.732Z"
   },
   {
-    "id": "8f14e45f-seed-5",
+    "id": "8f14e45f-order-1013",
+    "orderNumber": 1013,
     "userId": "8f14e45f-ceea-467a-9f7c-3b2a1d4e5f60",
     "title": "A buyer's guide to headless CMS platforms",
     "brief": "Comparison piece covering four platforms. Neutral tone, no vendor favouritism. Table of trade-offs at the end.",
-    "wordCount": 2000,
-    "deadline": "2026-10-03",
-    "stage": "brief_received",
-    "createdAt": "2026-09-11T13:41:49.001Z",
-    "updatedAt": "2026-09-12T13:41:49.001Z"
+    "keywords": [
+      "headless cms",
+      "buyers guide"
+    ],
+    "format": "whitepaper",
+    "wordCount": 2600,
+    "deadline": "2026-04-25",
+    "status": "completed",
+    "priority": "high",
+    "assignees": [
+      {
+        "name": "Theo Abara",
+        "avatarUrl": null
+      },
+      {
+        "name": "Inés Cabrera",
+        "avatarUrl": null
+      }
+    ],
+    "deliverable": {
+      "filename": "Headless_CMS_Buyers_Guide.docx",
+      "url": "#demo-download-unavailable",
+      "uploadedAt": "2026-04-22T14:55:51.732Z"
+    },
+    "createdAt": "2026-04-07T14:55:51.732Z",
+    "updatedAt": "2026-04-22T14:55:51.732Z"
+  },
+  {
+    "id": "8f14e45f-order-1014",
+    "orderNumber": 1014,
+    "userId": "8f14e45f-ceea-467a-9f7c-3b2a1d4e5f60",
+    "title": "10 ways small teams can cut cloud spend",
+    "brief": "Practical, tactics-first listicle aimed at engineering leads at companies under 50 people. Cite real pricing where possible. Friendly but not jokey.",
+    "keywords": [
+      "cloud cost",
+      "finops"
+    ],
+    "format": "blog_post",
+    "wordCount": 1200,
+    "deadline": "2026-04-29",
+    "status": "completed",
+    "priority": "medium",
+    "assignees": [
+      {
+        "name": "Mara Lindqvist",
+        "avatarUrl": null
+      }
+    ],
+    "deliverable": {
+      "filename": "Cloud_Spend_Listicle.docx",
+      "url": "#demo-download-unavailable",
+      "uploadedAt": "2026-04-27T14:55:51.732Z"
+    },
+    "createdAt": "2026-04-16T14:55:51.732Z",
+    "updatedAt": "2026-04-27T14:55:51.732Z"
+  },
+  {
+    "id": "8f14e45f-order-1015",
+    "orderNumber": 1015,
+    "userId": "8f14e45f-ceea-467a-9f7c-3b2a1d4e5f60",
+    "title": "Migrating a twelve-year-old Rails monolith",
+    "brief": "Long-form narrative piece. Interview notes supplied separately. Technical audience, so do not over-explain the basics.",
+    "keywords": [
+      "rails",
+      "migration",
+      "legacy code"
+    ],
+    "format": "case_study",
+    "wordCount": 2400,
+    "deadline": "2026-05-31",
+    "status": "completed",
+    "priority": "high",
+    "assignees": [
+      {
+        "name": "Theo Abara",
+        "avatarUrl": null
+      }
+    ],
+    "deliverable": {
+      "filename": "Rails_Monolith_Case_Study.docx",
+      "url": "#demo-download-unavailable",
+      "uploadedAt": "2026-05-28T14:55:51.732Z"
+    },
+    "createdAt": "2026-05-14T14:55:51.732Z",
+    "updatedAt": "2026-05-28T14:55:51.732Z"
+  },
+  {
+    "id": "8f14e45f-order-1016",
+    "orderNumber": 1016,
+    "userId": "8f14e45f-ceea-467a-9f7c-3b2a1d4e5f60",
+    "title": "Q2 customer newsletter",
+    "brief": "Quarterly roundup for the existing customer list. Three product notes, one customer story, one short essay.",
+    "keywords": [
+      "newsletter"
+    ],
+    "format": "newsletter",
+    "wordCount": 800,
+    "deadline": "2026-06-06",
+    "status": "completed",
+    "priority": "low",
+    "assignees": [
+      {
+        "name": "Ruth Mbeki",
+        "avatarUrl": null
+      }
+    ],
+    "deliverable": {
+      "filename": "Q2_Newsletter.docx",
+      "url": "#demo-download-unavailable",
+      "uploadedAt": "2026-06-03T14:55:51.732Z"
+    },
+    "createdAt": "2026-05-23T14:55:51.732Z",
+    "updatedAt": "2026-06-03T14:55:51.732Z"
+  },
+  {
+    "id": "8f14e45f-order-1017",
+    "orderNumber": 1017,
+    "userId": "8f14e45f-ceea-467a-9f7c-3b2a1d4e5f60",
+    "title": "What developer-first actually means",
+    "brief": "Category-defining essay. Willing to be contrarian. Should read like a point of view, not a feature list.",
+    "keywords": [
+      "developer experience"
+    ],
+    "format": "blog_post",
+    "wordCount": 1500,
+    "deadline": "2026-06-26",
+    "status": "cancelled",
+    "priority": "medium",
+    "assignees": [],
+    "deliverable": null,
+    "createdAt": "2026-06-08T14:55:51.732Z",
+    "updatedAt": "2026-06-10T14:55:51.732Z"
+  },
+  {
+    "id": "8f14e45f-order-1018",
+    "orderNumber": 1018,
+    "userId": "8f14e45f-ceea-467a-9f7c-3b2a1d4e5f60",
+    "title": "Pricing page copy rewrite",
+    "brief": "Rewrite of the three-tier pricing page. Needs to survive a legal review, so no unqualified superlatives.",
+    "keywords": [
+      "pricing",
+      "conversion"
+    ],
+    "format": "landing_page",
+    "wordCount": 600,
+    "deadline": "2026-07-12",
+    "status": "completed",
+    "priority": "high",
+    "assignees": [
+      {
+        "name": "Inés Cabrera",
+        "avatarUrl": null
+      }
+    ],
+    "deliverable": {
+      "filename": "Pricing_Page_Copy_v2.docx",
+      "url": "#demo-download-unavailable",
+      "uploadedAt": "2026-07-10T14:55:51.732Z"
+    },
+    "createdAt": "2026-06-30T14:55:51.732Z",
+    "updatedAt": "2026-07-10T14:55:51.732Z"
+  },
+  {
+    "id": "8f14e45f-order-1019",
+    "orderNumber": 1019,
+    "userId": "8f14e45f-ceea-467a-9f7c-3b2a1d4e5f60",
+    "title": "Customer success story: Acme Corp",
+    "brief": "Case study on Acme Corp's rollout. Quotes approved by their comms team, attached separately.",
+    "keywords": [
+      "case study",
+      "roi"
+    ],
+    "format": "case_study",
+    "wordCount": 1500,
+    "deadline": "2026-07-26",
+    "status": "completed",
+    "priority": "low",
+    "assignees": [
+      {
+        "name": "Ruth Mbeki",
+        "avatarUrl": null
+      },
+      {
+        "name": "Mara Lindqvist",
+        "avatarUrl": null
+      }
+    ],
+    "deliverable": {
+      "filename": "Customer_Success_Story_Final.docx",
+      "url": "#demo-download-unavailable",
+      "uploadedAt": "2026-07-23T14:55:51.732Z"
+    },
+    "createdAt": "2026-07-12T14:55:51.732Z",
+    "updatedAt": "2026-07-23T14:55:51.732Z"
+  },
+  {
+    "id": "8f14e45f-order-1020",
+    "orderNumber": 1020,
+    "userId": "8f14e45f-ceea-467a-9f7c-3b2a1d4e5f60",
+    "title": "What actually changed in the 2026 accessibility rules",
+    "brief": "Explainer for product managers who are not lawyers. Lead with what they have to do differently, not with the history of the legislation.",
+    "keywords": [
+      "accessibility",
+      "compliance"
+    ],
+    "format": "whitepaper",
+    "wordCount": 1600,
+    "deadline": "2026-08-13",
+    "status": "completed",
+    "priority": "high",
+    "assignees": [
+      {
+        "name": "Theo Abara",
+        "avatarUrl": null
+      }
+    ],
+    "deliverable": {
+      "filename": "Accessibility_Rules_2026.docx",
+      "url": "#demo-download-unavailable",
+      "uploadedAt": "2026-08-10T14:55:51.732Z"
+    },
+    "createdAt": "2026-07-30T14:55:51.732Z",
+    "updatedAt": "2026-08-10T14:55:51.732Z"
+  },
+  {
+    "id": "8f14e45f-order-1021",
+    "orderNumber": 1021,
+    "userId": "8f14e45f-ceea-467a-9f7c-3b2a1d4e5f60",
+    "title": "Integrations launch announcement",
+    "brief": "Launch post for six new integrations. Short, concrete, one paragraph per integration.",
+    "keywords": [
+      "product launch",
+      "integrations"
+    ],
+    "format": "blog_post",
+    "wordCount": 1100,
+    "deadline": "2026-08-27",
+    "status": "completed",
+    "priority": "medium",
+    "assignees": [
+      {
+        "name": "Mara Lindqvist",
+        "avatarUrl": null
+      }
+    ],
+    "deliverable": {
+      "filename": "Integrations_Launch_Post.docx",
+      "url": "#demo-download-unavailable",
+      "uploadedAt": "2026-08-25T14:55:51.732Z"
+    },
+    "createdAt": "2026-08-14T14:55:51.732Z",
+    "updatedAt": "2026-08-25T14:55:51.732Z"
+  },
+  {
+    "id": "8f14e45f-order-1022",
+    "orderNumber": 1022,
+    "userId": "8f14e45f-ceea-467a-9f7c-3b2a1d4e5f60",
+    "title": "Q3 newsletter",
+    "brief": "Quarterly roundup. Same shape as Q2. Lead with the integrations launch.",
+    "keywords": [
+      "newsletter"
+    ],
+    "format": "newsletter",
+    "wordCount": 850,
+    "deadline": "2026-09-19",
+    "status": "pending_review",
+    "priority": "medium",
+    "assignees": [
+      {
+        "name": "Ruth Mbeki",
+        "avatarUrl": null
+      }
+    ],
+    "deliverable": null,
+    "createdAt": "2026-08-27T14:55:51.732Z",
+    "updatedAt": "2026-08-29T14:55:51.732Z"
+  },
+  {
+    "id": "8f14e45f-order-1023",
+    "orderNumber": 1023,
+    "userId": "8f14e45f-ceea-467a-9f7c-3b2a1d4e5f60",
+    "title": "Landing page copy for the developer plan",
+    "brief": "New landing page for the self-serve developer tier. Draft only so far — still waiting on final pricing.",
+    "keywords": [
+      "landing page",
+      "developer plan"
+    ],
+    "format": "landing_page",
+    "wordCount": 700,
+    "deadline": "2026-10-04",
+    "status": "draft",
+    "priority": "low",
+    "assignees": [],
+    "deliverable": null,
+    "createdAt": "2026-09-06T14:55:51.732Z",
+    "updatedAt": "2026-09-08T14:55:51.732Z"
+  },
+  {
+    "id": "8f14e45f-order-1024",
+    "orderNumber": 1024,
+    "userId": "8f14e45f-ceea-467a-9f7c-3b2a1d4e5f60",
+    "title": "SaaS Growth Guide",
+    "brief": "Comprehensive guide on increasing SaaS retention.",
+    "keywords": [
+      "saas retention",
+      "churn rate"
+    ],
+    "format": "whitepaper",
+    "wordCount": 5000,
+    "deadline": "2026-10-01",
+    "status": "in_progress",
+    "priority": "high",
+    "assignees": [
+      {
+        "name": "Theo Abara",
+        "avatarUrl": null
+      },
+      {
+        "name": "Inés Cabrera",
+        "avatarUrl": null
+      },
+      {
+        "name": "Mara Lindqvist",
+        "avatarUrl": null
+      }
+    ],
+    "deliverable": null,
+    "createdAt": "2026-09-08T14:55:51.732Z",
+    "updatedAt": "2026-09-10T14:55:51.732Z"
   }
 ]

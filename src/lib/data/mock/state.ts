@@ -40,6 +40,12 @@ export interface MockState {
    * they cost zero cookie bytes.
    */
   orders: Order[];
+  /**
+   * When the user last hit "mark all as read". A seeded notification counts as
+   * read if it was created before this, which means one timestamp replaces a
+   * growing list of ids and the cookie stays small.
+   */
+  notificationsReadAt: string | null;
   /** Sign-out keeps the account but drops the session, so sign-in is testable. */
   authenticated: boolean;
 }
