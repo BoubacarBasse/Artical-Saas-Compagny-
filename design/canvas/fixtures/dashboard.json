@@ -1,0 +1,46 @@
+{
+  "_note": "Counts and chart series exactly as the app computes them from orders.json. Monthly completions are agency-scale on purpose — see 03-data-and-content.md.",
+  "total": 13,
+  "draft": 1,
+  "inProgress": 1,
+  "pendingReview": 1,
+  "completed": 9,
+  "cancelled": 1,
+  "completionsByMonth": [
+    {
+      "month": "2026-03",
+      "label": "Mar",
+      "count": 1
+    },
+    {
+      "month": "2026-04",
+      "label": "Apr",
+      "count": 2
+    },
+    {
+      "month": "2026-05",
+      "label": "May",
+      "count": 1
+    },
+    {
+      "month": "2026-06",
+      "label": "Jun",
+      "count": 1
+    },
+    {
+      "month": "2026-07",
+      "label": "Jul",
+      "count": 2
+    },
+    {
+      "month": "2026-08",
+      "label": "Aug",
+      "count": 2
+    },
+    {
+      "month": "2026-09",
+      "label": "Sep",
+      "count": 0
+    }
+  ]
+}

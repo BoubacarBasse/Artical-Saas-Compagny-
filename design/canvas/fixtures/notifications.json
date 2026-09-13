@@ -1,0 +1,42 @@
+[
+  {
+    "id": "n1",
+    "kind": "order_update",
+    "title": "Your order 'SaaS Growth Guide' is now in progress",
+    "orderId": "1024",
+    "createdAt": "2026-09-10",
+    "read": false
+  },
+  {
+    "id": "n2",
+    "kind": "order_update",
+    "title": "Order 'Q3 newsletter' is ready for your review",
+    "orderId": "1023",
+    "createdAt": "2026-09-09",
+    "read": false
+  },
+  {
+    "id": "n3",
+    "kind": "order_complete",
+    "title": "Order 'Integrations launch announcement' marked as complete",
+    "orderId": "1020",
+    "createdAt": "2026-08-26",
+    "read": true
+  },
+  {
+    "id": "n4",
+    "kind": "order_complete",
+    "title": "Order 'Mid-market spreadsheets whitepaper' marked as complete",
+    "orderId": "1019",
+    "createdAt": "2026-08-14",
+    "read": true
+  },
+  {
+    "id": "n5",
+    "kind": "system",
+    "title": "Welcome to Article Orders",
+    "orderId": null,
+    "createdAt": "2026-03-01",
+    "read": true
+  }
+]

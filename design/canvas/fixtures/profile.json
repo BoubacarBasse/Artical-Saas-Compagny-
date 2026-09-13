@@ -1,0 +1,16 @@
+{
+  "email": "elena@harborline.io",
+  "fullName": "Elena Márquez",
+  "company": "Harborline Analytics",
+  "avatarUrl": null,
+  "notifications": {
+    "statusChange": true,
+    "delivered": true,
+    "weeklySummary": false
+  },
+  "defaults": {
+    "wordCount": 1500,
+    "format": "Blog post",
+    "tone": "Practical, plain-spoken"
+  }
+}

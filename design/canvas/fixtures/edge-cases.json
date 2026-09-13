@@ -1,0 +1,161 @@
+[
+  {
+    "id": "edge-max-title",
+    "n": 1031,
+    "edge": true,
+    "status": "in_progress",
+    "priority": "medium",
+    "format": "Whitepaper",
+    "words": 6000,
+    "deadline": "2026-10-02",
+    "created": "2026-09-04",
+    "assignees": [
+      "Priya Raman"
+    ],
+    "keywords": [
+      "operations",
+      "workflow"
+    ],
+    "deliverable": null,
+    "title": "How mid-market operations teams replace seven overlapping spreadsheets with a single content workflow, without a migrati",
+    "brief": "Tests a title at the 120-character maximum in every list and header."
+  },
+  {
+    "id": "edge-min-title",
+    "n": 1032,
+    "edge": true,
+    "title": "SEO",
+    "status": "draft",
+    "priority": "low",
+    "format": "Blog post",
+    "words": 100,
+    "deadline": null,
+    "created": "2026-09-09",
+    "assignees": [],
+    "keywords": [],
+    "deliverable": null,
+    "brief": "Tests the three-character minimum title and the hundred-word minimum together."
+  },
+  {
+    "id": "edge-overdue",
+    "n": 1033,
+    "edge": true,
+    "title": "Enterprise buyer’s guide",
+    "status": "in_progress",
+    "priority": "high",
+    "format": "Whitepaper",
+    "words": 4800,
+    "deadline": "2026-08-20",
+    "created": "2026-07-14",
+    "assignees": [
+      "Tomas Lindqvist"
+    ],
+    "keywords": [
+      "enterprise",
+      "buyer guide",
+      "procurement"
+    ],
+    "deliverable": null,
+    "brief": "Deadline has passed and the work is still in flight. None of the thirteen sample orders is overdue, so this is the record that tests the treatment."
+  },
+  {
+    "id": "edge-many-assignees",
+    "n": 1034,
+    "edge": true,
+    "title": "Annual report, long form",
+    "status": "in_progress",
+    "priority": "medium",
+    "format": "Whitepaper",
+    "words": 9000,
+    "deadline": "2026-10-30",
+    "created": "2026-08-28",
+    "assignees": [
+      "Mara Okafor",
+      "Priya Raman",
+      "Tomas Lindqvist",
+      "Jonah Weiss"
+    ],
+    "keywords": [
+      "annual report",
+      "long form"
+    ],
+    "deliverable": null,
+    "brief": "Four writers split the sections. Tests the avatar overflow rule."
+  },
+  {
+    "id": "edge-max-keywords",
+    "n": 1035,
+    "edge": true,
+    "title": "Content strategy for regulated industries",
+    "status": "pending_review",
+    "priority": "medium",
+    "format": "Case study",
+    "words": 2400,
+    "deadline": "2026-09-30",
+    "created": "2026-08-22",
+    "assignees": [
+      "Priya Raman"
+    ],
+    "deliverable": null,
+    "keywords": [
+      "content strategy",
+      "regulated industries",
+      "compliance",
+      "financial services",
+      "healthcare",
+      "legal review",
+      "governance",
+      "brand voice",
+      "risk",
+      "approval workflow"
+    ],
+    "brief": "Ten keywords, the maximum, so the chip row has to wrap."
+  },
+  {
+    "id": "edge-long-filename",
+    "n": 1036,
+    "edge": true,
+    "title": "Quarterly business review template",
+    "status": "completed",
+    "priority": "low",
+    "format": "Case study",
+    "words": 1200,
+    "deadline": "2026-09-01",
+    "created": "2026-08-02",
+    "assignees": [
+      "Mara Okafor"
+    ],
+    "keywords": [
+      "qbr",
+      "template"
+    ],
+    "deliverable": {
+      "filename": "Quarterly_Business_Review_Template_Final_Approved_Legal_Reviewed_2026_09.docx",
+      "uploadedAt": "2026-08-29"
+    },
+    "brief": "The deliverable filename is long enough to need truncating without losing the extension."
+  },
+  {
+    "id": "edge-long-brief",
+    "n": 1037,
+    "edge": true,
+    "title": "Platform migration deep dive",
+    "status": "in_progress",
+    "priority": "high",
+    "format": "Whitepaper",
+    "words": 10000,
+    "deadline": "2026-11-14",
+    "created": "2026-09-01",
+    "assignees": [
+      "Priya Raman",
+      "Jonah Weiss"
+    ],
+    "keywords": [
+      "migration",
+      "platform",
+      "architecture"
+    ],
+    "deliverable": null,
+    "brief": "This brief exists to dominate the detail page.\n\nWe are moving three product lines off a platform that has been in place for nine years, and the piece has to be useful to two audiences at once: the operations lead who owns the timeline, and the engineer who owns the data. Start with why teams delay migrations — the cost is visible and the benefit is not — then work through the four phases we use, with the honest failure mode of each.\n\nPhase one is inventory. Most teams underestimate it by a factor of three, because the systems nobody claims are the systems everybody depends on. Phase two is mapping, where the argument about field semantics happens; we want the piece to say plainly that this argument is the work, not a delay to the work. Phase three is the cutover rehearsal, which is where our own migration went wrong in 2024 and is worth describing in detail. Phase four is decommissioning, which nobody budgets for.\n\nTone: plain, specific, no vendor triumphalism. Include the eleven-day Northwind figure if it fits, but do not build the piece around it. Assume the reader has been burned before."
+  }
+]

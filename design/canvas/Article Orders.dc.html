@@ -1,0 +1,1613 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:#f7f4f0}
+  body{font-family:'IBM Plex Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  a{color:#b4502f;text-decoration:none}
+  a:hover{color:#8f3d22;text-decoration:underline}
+  button{font-family:inherit}
+  input,textarea,select{font-family:inherit}
+  ::placeholder{color:#a8a09a}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+</style>
+</helmet>
+
+<div style="display:flex;min-height:100vh;background:#f7f4f0;color:#1c1917;font-size:14px;line-height:1.5">
+
+  <aside style="width:236px;flex:0 0 236px;background:#fffefc;border-right:1px solid #e5dfd7;display:flex;flex-direction:column;position:sticky;top:0;height:100vh">
+    <div style="padding:22px 20px 18px 20px;display:flex;align-items:center;gap:10px">
+      <div style="width:28px;height:28px;border-radius:7px;background:#b4502f;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:13px;letter-spacing:-.02em">A</div>
+      <div>
+        <div style="font-weight:600;font-size:14px;letter-spacing:-.01em">Article Orders</div>
+        <div style="font-size:11px;color:#8a8178;font-family:'IBM Plex Mono',monospace">{{ profile.company }}</div>
+      </div>
+    </div>
+
+    <nav style="display:flex;flex-direction:column;gap:2px;padding:6px 12px">
+      <button onClick="{{ goDashboard }}" style="display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:9px 10px;border:0;border-radius:7px;cursor:pointer;font-size:13.5px;font-weight:500;background:{{ navDashBg }};color:{{ navDashFg }}" style-hover="background:#f2ede7">
+        <span style="width:16px;height:16px;display:block;border:1.6px solid currentColor;border-radius:3px;opacity:.85"></span>Dashboard
+      </button>
+      <button onClick="{{ goTasks }}" style="display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:9px 10px;border:0;border-radius:7px;cursor:pointer;font-size:13.5px;font-weight:500;background:{{ navTasksBg }};color:{{ navTasksFg }}" style-hover="background:#f2ede7">
+        <span style="width:16px;height:16px;display:block;border:1.6px solid currentColor;border-radius:3px;opacity:.85"></span>My Tasks
+      </button>
+      <button onClick="{{ goInbox }}" style="display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:9px 10px;border:0;border-radius:7px;cursor:pointer;font-size:13.5px;font-weight:500;background:{{ navInboxBg }};color:{{ navInboxFg }}" style-hover="background:#f2ede7">
+        <span style="width:16px;height:16px;display:block;border:1.6px solid currentColor;border-radius:3px;opacity:.85"></span>
+        <span style="flex:1">Inbox</span>
+        <sc-if value="{{ hasUnread }}" hint-placeholder-val="{{ true }}">
+          <span style="min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#b4502f;color:#fff;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace">{{ unreadCount }}</span>
+        </sc-if>
+      </button>
+    </nav>
+
+    <div style="padding:14px 16px 6px 16px">
+      <button onClick="{{ goNew }}" style="width:100%;padding:10px 12px;border:0;border-radius:7px;background:#b4502f;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;box-shadow:0 1px 2px rgba(28,25,23,.12)" style-hover="background:#8f3d22">Order an article</button>
+    </div>
+
+    <div style="margin-top:auto;padding:16px;border-top:1px solid #e5dfd7">
+      <div style="font-size:11px;color:#a8a09a;line-height:1.6">Next deadline<br /><span style="font-family:'IBM Plex Mono',monospace;color:#57534e;font-size:12px">{{ nextDeadline }}</span></div>
+    </div>
+  </aside>
+
+  <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+
+    <header style="height:64px;flex:0 0 64px;background:#fffefc;border-bottom:1px solid #e5dfd7;display:flex;align-items:center;gap:16px;padding:0 24px;position:sticky;top:0;z-index:30">
+      <button onClick="{{ openSearch }}" style="display:flex;align-items:center;gap:10px;width:340px;max-width:42vw;padding:8px 12px;border:1px solid #e5dfd7;border-radius:7px;background:#f7f4f0;color:#8a8178;font-size:13px;cursor:pointer;text-align:left" style-hover="border-color:#d6cdc2;background:#f4efe9">
+        <span style="width:13px;height:13px;border:1.6px solid #a8a09a;border-radius:50%;display:block"></span>
+        <span style="flex:1">Search orders</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;border:1px solid #e0d8ce;border-radius:4px;padding:1px 5px;background:#fffefc">⌘1</span>
+      </button>
+
+      <div style="flex:1"></div>
+
+      <button onClick="{{ goInbox }}" style="position:relative;width:34px;height:34px;border:1px solid #e5dfd7;border-radius:7px;background:#fffefc;cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="background:#f4efe9">
+        <span style="width:13px;height:13px;border:1.6px solid #57534e;border-radius:4px 4px 2px 2px;display:block"></span>
+        <sc-if value="{{ hasUnread }}" hint-placeholder-val="{{ true }}">
+          <span style="position:absolute;top:-3px;right:-3px;width:16px;height:16px;border-radius:8px;background:#b4502f;color:#fff;font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;border:2px solid #fffefc;font-family:'IBM Plex Mono',monospace">{{ unreadCount }}</span>
+        </sc-if>
+      </button>
+
+      <div style="position:relative">
+        <button onClick="{{ toggleAvatar }}" style="display:flex;align-items:center;gap:9px;padding:4px 8px 4px 4px;border:1px solid transparent;border-radius:8px;background:transparent;cursor:pointer" style-hover="background:#f4efe9;border-color:#e5dfd7">
+          <span style="width:28px;height:28px;border-radius:50%;background:#1f4d3a;color:#fff;font-size:11.5px;font-weight:600;display:flex;align-items:center;justify-content:center;letter-spacing:.02em">{{ profile.initials }}</span>
+          <span style="font-size:13px;font-weight:500;color:#1c1917">{{ profile.fullName }}</span>
+          <span style="width:6px;height:6px;border-right:1.5px solid #8a8178;border-bottom:1.5px solid #8a8178;transform:rotate(45deg) translateY(-2px);display:block"></span>
+        </button>
+        <sc-if value="{{ avatarOpen }}" hint-placeholder-val="{{ false }}">
+          <div style="position:absolute;top:46px;right:0;width:252px;background:#fffefc;border:1px solid #e5dfd7;border-radius:10px;box-shadow:0 8px 28px rgba(28,25,23,.14);padding:6px;z-index:40">
+            <div style="padding:10px 10px 12px 10px;border-bottom:1px solid #f0ebe4;margin-bottom:6px">
+              <div style="font-size:13.5px;font-weight:600">{{ profile.fullName }}</div>
+              <div style="font-size:12px;color:#8a8178;font-family:'IBM Plex Mono',monospace">{{ profile.email }}</div>
+            </div>
+            <button onClick="{{ goSettings }}" style="display:block;width:100%;text-align:left;padding:9px 10px;border:0;border-radius:6px;background:transparent;font-size:13px;cursor:pointer;color:#1c1917" style-hover="background:#f4efe9">Settings</button>
+            <button onClick="{{ goFoundations }}" style="display:block;width:100%;text-align:left;padding:9px 10px;border:0;border-radius:6px;background:transparent;font-size:13px;cursor:pointer;color:#1c1917" style-hover="background:#f4efe9">Design foundations</button>
+            <div style="height:1px;background:#f0ebe4;margin:6px 0"></div>
+            <button onClick="{{ noop }}" style="display:block;width:100%;text-align:left;padding:9px 10px;border:0;border-radius:6px;background:transparent;font-size:13px;cursor:pointer;color:#a03a22" style-hover="background:#f9ece7">Sign out</button>
+          </div>
+        </sc-if>
+      </div>
+    </header>
+
+    <sc-if value="{{ demoBanner }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 24px;background:#f8eed6;border-bottom:1px solid #ecdcb4;color:#7a5200;font-size:12.5px">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;border:1px solid #d9bf85;border-radius:4px;padding:2px 6px">Demo data</span>
+        <span>You are looking at sample orders. Nothing here is connected to a live database.</span>
+      </div>
+    </sc-if>
+
+    <main style="flex:1;padding:28px 24px 96px 24px">
+      <div style="max-width:1180px;margin:0 auto">
+
+        <sc-if value="{{ isDashboard }}" hint-placeholder-val="{{ true }}">
+          <div>
+            <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:22px">
+              <div>
+                <h1 style="margin:0 0 4px 0;font-size:24px;font-weight:600;letter-spacing:-.02em">{{ greeting }}</h1>
+                <p style="margin:0;color:#8a8178;font-size:13.5px">{{ dashSubtitle }}</p>
+              </div>
+              <button onClick="{{ goNew }}" style="padding:10px 16px;border:0;border-radius:7px;background:#b4502f;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;white-space:nowrap" style-hover="background:#8f3d22">Order an article</button>
+            </div>
+
+            <sc-if value="{{ isLoading }}" hint-placeholder-val="{{ false }}">
+              <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:16px">
+                <sc-for list="{{ skeletons }}" as="s" hint-placeholder-count="6">
+                  <div style="height:92px;border:1px solid #e5dfd7;border-radius:10px;background:#fffefc;padding:16px">
+                    <div style="width:64px;height:10px;border-radius:3px;background:#ece6de;animation:pulse 1.4s ease-in-out infinite"></div>
+                    <div style="width:44px;height:26px;border-radius:4px;background:#ece6de;margin-top:14px;animation:pulse 1.4s ease-in-out infinite"></div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="height:260px;border:1px solid #e5dfd7;border-radius:10px;background:#fffefc"></div>
+            </sc-if>
+
+            <sc-if value="{{ isError }}" hint-placeholder-val="{{ false }}">
+              <div style="border:1px solid #e8cdc2;background:#fdf4f0;border-radius:10px;padding:28px;text-align:center">
+                <div style="font-size:15px;font-weight:600;margin-bottom:6px">We could not load your dashboard</div>
+                <p style="margin:0 0 16px 0;color:#7a736c;font-size:13px">Something went wrong on our side. Your orders are safe.</p>
+                <button onClick="{{ retry }}" style="padding:9px 16px;border:1px solid #b4502f;border-radius:7px;background:#fffefc;color:#b4502f;font-weight:600;font-size:13px;cursor:pointer" style-hover="background:#f9ece7">Retry</button>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ dashReady }}" hint-placeholder-val="{{ true }}">
+              <div>
+                <div style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-bottom:16px">
+                  <sc-for list="{{ stats }}" as="st" hint-placeholder-count="6">
+                    <div style="border:1px solid #e5dfd7;border-radius:10px;background:#fffefc;padding:14px 16px;box-shadow:0 1px 2px rgba(28,25,23,.04)">
+                      <div style="font-size:11.5px;color:#8a8178;letter-spacing:.02em;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ st.label }}</div>
+                      <div style="font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:500;letter-spacing:-.02em;color:{{ st.color }}">{{ st.value }}</div>
+                    </div>
+                  </sc-for>
+                </div>
+
+                <div style="display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:16px;align-items:start">
+
+                  <section style="border:1px solid #e5dfd7;border-radius:10px;background:#fffefc;padding:20px;box-shadow:0 1px 2px rgba(28,25,23,.04)">
+                    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px">
+                      <h2 style="margin:0;font-size:14.5px;font-weight:600">Articles completed</h2>
+                      <span style="font-size:11.5px;color:#a8a09a;font-family:'IBM Plex Mono',monospace">last 7 months</span>
+                    </div>
+                    <p style="margin:0 0 22px 0;font-size:12.5px;color:#8a8178">{{ chartSummary }}</p>
+
+                    <sc-if value="{{ chartEmpty }}" hint-placeholder-val="{{ false }}">
+                      <div style="border:1px dashed #ddd5ca;border-radius:8px;background:#faf7f3;padding:30px 24px;text-align:center">
+                        <div style="display:flex;align-items:flex-end;justify-content:center;gap:10px;height:56px;margin-bottom:18px;opacity:.5">
+                          <sc-for list="{{ chart }}" as="b" hint-placeholder-count="7">
+                            <div style="width:20px;height:3px;border-radius:2px;background:#d6cdc2"></div>
+                          </sc-for>
+                        </div>
+                        <div style="font-size:13.5px;font-weight:600;margin-bottom:4px">No completed articles yet</div>
+                        <p style="margin:0 auto;max-width:300px;font-size:12.5px;color:#8a8178">This chart fills in as pieces are delivered. Your first order will show up here the month it is finished.</p>
+                      </div>
+                    </sc-if>
+
+                    <sc-if value="{{ chartHasData }}" hint-placeholder-val="{{ true }}">
+                      <div>
+                        <div style="display:flex;gap:10px">
+                          <div style="display:flex;flex-direction:column;justify-content:space-between;height:176px;padding-bottom:22px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#a8a09a;text-align:right;width:14px">
+                            <sc-for list="{{ yTicks }}" as="t" hint-placeholder-count="4">
+                              <div>{{ t }}</div>
+                            </sc-for>
+                          </div>
+                          <div style="flex:1;position:relative">
+                            <div style="position:absolute;inset:0 0 22px 0;display:flex;flex-direction:column;justify-content:space-between">
+                              <sc-for list="{{ yTicks }}" as="t" hint-placeholder-count="4">
+                                <div style="height:1px;background:#f0ebe4"></div>
+                              </sc-for>
+                            </div>
+                            <div style="position:relative;display:flex;align-items:flex-end;gap:8px;height:154px">
+                              <sc-for list="{{ chart }}" as="b" hint-placeholder-count="7">
+                                <div onMouseEnter="{{ b.enter }}" onMouseLeave="{{ leaveBar }}" style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;position:relative;cursor:default">
+                                  <sc-if value="{{ b.hovered }}" hint-placeholder-val="{{ false }}">
+                                    <div style="position:absolute;bottom:100%;margin-bottom:8px;background:#1c1917;color:#fff;border-radius:6px;padding:7px 10px;font-size:11.5px;white-space:nowrap;box-shadow:0 4px 14px rgba(28,25,23,.22);z-index:5">
+                                      <div style="font-family:'IBM Plex Mono',monospace;letter-spacing:.02em;opacity:.7">{{ b.fullMonth }}</div>
+                                      <div style="font-weight:600">{{ b.tip }}</div>
+                                    </div>
+                                  </sc-if>
+                                  <div style="width:100%;max-width:46px;border-radius:5px 5px 0 0;background:{{ b.fill }};height:{{ b.h }};min-height:3px;transition:background .12s"></div>
+                                </div>
+                              </sc-for>
+                            </div>
+                            <div style="display:flex;gap:8px;height:22px;align-items:center">
+                              <sc-for list="{{ chart }}" as="b" hint-placeholder-count="7">
+                                <div style="flex:1;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11px;color:{{ b.labelColor }}">{{ b.label }}</div>
+                              </sc-for>
+                            </div>
+                          </div>
+                        </div>
+                        <div style="margin-top:14px;padding-top:12px;border-top:1px solid #f0ebe4;font-size:12px;color:#8a8178">September is still in progress — nothing delivered yet this month.</div>
+                      </div>
+                    </sc-if>
+                  </section>
+
+                  <section style="border:1px solid #e5dfd7;border-radius:10px;background:#fffefc;box-shadow:0 1px 2px rgba(28,25,23,.04)">
+                    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px 12px 18px">
+                      <h2 style="margin:0;font-size:14.5px;font-weight:600">Recent orders</h2>
+                      <button onClick="{{ goTasks }}" style="border:0;background:transparent;color:#b4502f;font-size:12.5px;font-weight:600;cursor:pointer;padding:0" style-hover="color:#8f3d22">View all</button>
+                    </div>
+                    <sc-if value="{{ hasOrders }}" hint-placeholder-val="{{ true }}">
+                      <div>
+                        <sc-for list="{{ recent }}" as="o" hint-placeholder-count="5">
+                          <button onClick="{{ o.open }}" style="display:block;width:100%;text-align:left;border:0;border-top:1px solid #f0ebe4;background:transparent;padding:12px 18px;cursor:pointer" style-hover="background:#faf7f3">
+                            <div style="display:flex;align-items:center;gap:10px;margin-bottom:5px">
+                              <span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#a8a09a">#{{ o.n }}</span>
+                              <span style="display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;background:{{ o.badgeBg }};color:{{ o.badgeFg }}">{{ o.statusLabel }}</span>
+                              <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:{{ o.deadlineColor }}">{{ o.deadlineShort }}</span>
+                            </div>
+                            <div style="font-size:13.5px;font-weight:500;color:#1c1917;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.title }}</div>
+                          </button>
+                        </sc-for>
+                      </div>
+                    </sc-if>
+                    <sc-if value="{{ noOrders }}" hint-placeholder-val="{{ false }}">
+                      <div style="border-top:1px solid #f0ebe4;padding:28px 20px;text-align:center">
+                        <div style="font-size:13.5px;font-weight:600;margin-bottom:4px">No orders yet</div>
+                        <p style="margin:0 0 14px 0;font-size:12.5px;color:#8a8178">Tell us what you need written and we will assign a writer.</p>
+                        <button onClick="{{ goNew }}" style="padding:8px 14px;border:0;border-radius:7px;background:#b4502f;color:#fff;font-size:12.5px;font-weight:600;cursor:pointer" style-hover="background:#8f3d22">Order your first article</button>
+                      </div>
+                    </sc-if>
+                  </section>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isTasks }}" hint-placeholder-val="{{ false }}">
+          <div>
+            <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:18px">
+              <div>
+                <h1 style="margin:0 0 4px 0;font-size:24px;font-weight:600;letter-spacing:-.02em">My Tasks</h1>
+                <p style="margin:0;color:#8a8178;font-size:13.5px">{{ tasksSubtitle }}</p>
+              </div>
+              <button onClick="{{ goNew }}" style="padding:10px 16px;border:0;border-radius:7px;background:#b4502f;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;white-space:nowrap" style-hover="background:#8f3d22">Order an article</button>
+            </div>
+
+            <div style="border:1px solid #e5dfd7;border-radius:10px;background:#fffefc;box-shadow:0 1px 2px rgba(28,25,23,.04);overflow:hidden">
+
+              <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid #f0ebe4;flex-wrap:wrap">
+                <div style="display:flex;align-items:center;gap:8px;border:1px solid #e5dfd7;border-radius:7px;background:#f7f4f0;padding:7px 10px;width:280px">
+                  <span style="width:12px;height:12px;border:1.6px solid #a8a09a;border-radius:50%;display:block;flex:0 0 12px"></span>
+                  <input value="{{ query }}" onChange="{{ setQuery }}" placeholder="Search title and brief" style="flex:1;min-width:0;border:0;outline:none;background:transparent;font-size:13px;color:#1c1917" />
+                  <sc-if value="{{ hasQuery }}" hint-placeholder-val="{{ false }}">
+                    <button onClick="{{ clearQuery }}" style="border:0;background:transparent;cursor:pointer;color:#8a8178;font-size:14px;line-height:1;padding:0">×</button>
+                  </sc-if>
+                </div>
+
+                <div style="display:flex;gap:6px;flex-wrap:wrap">
+                  <sc-for list="{{ statusFilters }}" as="f" hint-placeholder-count="5">
+                    <button onClick="{{ f.toggle }}" style="padding:6px 11px;border:1px solid {{ f.border }};border-radius:20px;background:{{ f.bg }};color:{{ f.fg }};font-size:12px;font-weight:500;cursor:pointer" style-hover="border-color:#c9bfb2">{{ f.label }}</button>
+                  </sc-for>
+                </div>
+
+                <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+                  <label style="font-size:12px;color:#8a8178">Sort</label>
+                  <select value="{{ sort }}" onChange="{{ setSort }}" style="border:1px solid #e5dfd7;border-radius:7px;background:#fffefc;padding:7px 9px;font-size:12.5px;color:#1c1917;cursor:pointer">
+                    <option value="newest">Newest first</option>
+                    <option value="oldest">Oldest first</option>
+                    <option value="deadline_soon">Deadline soonest</option>
+                    <option value="deadline_late">Deadline latest</option>
+                    <option value="title">Title A–Z</option>
+                  </select>
+                </div>
+              </div>
+
+              <sc-if value="{{ anyFilterActive }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid #f0ebe4;background:#faf7f3;flex-wrap:wrap">
+                  <span style="font-size:12px;color:#8a8178">Filtered by</span>
+                  <sc-for list="{{ activeChips }}" as="c" hint-placeholder-count="2">
+                    <span style="display:inline-flex;align-items:center;gap:6px;padding:3px 6px 3px 9px;border-radius:20px;background:#f2e5df;color:#8f3d22;font-size:11.5px;font-weight:600">
+                      {{ c.label }}
+                      <button onClick="{{ c.remove }}" style="border:0;background:transparent;cursor:pointer;color:#8f3d22;font-size:13px;line-height:1;padding:0">×</button>
+                    </span>
+                  </sc-for>
+                  <button onClick="{{ clearFilters }}" style="margin-left:4px;border:0;background:transparent;color:#b4502f;font-size:12px;font-weight:600;cursor:pointer;padding:0;text-decoration:underline">Clear all</button>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ isLoading }}" hint-placeholder-val="{{ false }}">
+                <div style="padding:8px 0">
+                  <sc-for list="{{ skeletonRows }}" as="s" hint-placeholder-count="6">
+                    <div style="display:flex;align-items:center;gap:16px;padding:14px 16px;border-bottom:1px solid #f7f3ee">
+                      <div style="width:48px;height:10px;border-radius:3px;background:#ece6de;animation:pulse 1.4s ease-in-out infinite"></div>
+                      <div style="flex:1;height:10px;border-radius:3px;background:#ece6de;animation:pulse 1.4s ease-in-out infinite"></div>
+                      <div style="width:88px;height:18px;border-radius:9px;background:#ece6de;animation:pulse 1.4s ease-in-out infinite"></div>
+                      <div style="width:70px;height:10px;border-radius:3px;background:#ece6de;animation:pulse 1.4s ease-in-out infinite"></div>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ isError }}" hint-placeholder-val="{{ false }}">
+                <div style="padding:44px 24px;text-align:center">
+                  <div style="font-size:15px;font-weight:600;margin-bottom:6px">We could not load your orders</div>
+                  <p style="margin:0 0 16px 0;color:#7a736c;font-size:13px">The request timed out. Nothing has been lost.</p>
+                  <button onClick="{{ retry }}" style="padding:9px 16px;border:1px solid #b4502f;border-radius:7px;background:#fffefc;color:#b4502f;font-weight:600;font-size:13px;cursor:pointer" style-hover="background:#f9ece7">Retry</button>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ showRows }}" hint-placeholder-val="{{ true }}">
+                <div>
+                  <div style="display:grid;grid-template-columns:76px minmax(0,1fr) 132px 120px 124px;gap:16px;padding:10px 16px;border-bottom:1px solid #f0ebe4;background:#faf7f3;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#8a8178">
+                    <div>Order</div><div>Article</div><div>Status</div><div>Writers</div><div>Deadline</div>
+                  </div>
+                  <sc-for list="{{ rows }}" as="o" hint-placeholder-count="10">
+                    <div onClick="{{ o.open }}" style="display:grid;grid-template-columns:76px minmax(0,1fr) 132px 120px 124px;gap:16px;padding:13px 16px;border-bottom:1px solid #f7f3ee;cursor:pointer;align-items:center" style-hover="background:#faf7f3">
+                      <div style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:#8a8178">#{{ o.n }}</div>
+                      <div style="min-width:0">
+                        <div style="font-size:13.5px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.title }}</div>
+                        <div style="font-size:11.5px;color:#a8a09a;margin-top:2px">{{ o.metaLine }}</div>
+                      </div>
+                      <div>
+                        <span style="display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:11.5px;font-weight:600;background:{{ o.badgeBg }};color:{{ o.badgeFg }}">{{ o.statusLabel }}</span>
+                      </div>
+                      <div style="display:flex;align-items:center">
+                        <sc-for list="{{ o.avatars }}" as="a" hint-placeholder-count="2">
+                          <span title="{{ a.name }}" style="width:26px;height:26px;border-radius:50%;background:{{ a.bg }};color:#fff;font-size:10.5px;font-weight:600;display:flex;align-items:center;justify-content:center;border:2px solid #fffefc;margin-left:-6px">{{ a.initials }}</span>
+                        </sc-for>
+                        <sc-if value="{{ o.hasOverflow }}" hint-placeholder-val="{{ false }}">
+                          <span style="width:26px;height:26px;border-radius:50%;background:#ece6de;color:#57534e;font-size:10.5px;font-weight:600;display:flex;align-items:center;justify-content:center;border:2px solid #fffefc;margin-left:-6px;font-family:'IBM Plex Mono',monospace">{{ o.overflowLabel }}</span>
+                        </sc-if>
+                        <sc-if value="{{ o.unassigned }}" hint-placeholder-val="{{ false }}">
+                          <span style="font-size:11.5px;color:#a8a09a">Unassigned</span>
+                        </sc-if>
+                      </div>
+                      <div style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:{{ o.deadlineColor }}">{{ o.deadlineShort }}</div>
+                    </div>
+                  </sc-for>
+
+                  <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;gap:12px">
+                    <div style="font-size:12.5px;color:#8a8178;font-family:'IBM Plex Mono',monospace">{{ showingLabel }}</div>
+                    <div style="display:flex;align-items:center;gap:6px">
+                      <button onClick="{{ prevPage }}" disabled="{{ onFirstPage }}" style="padding:6px 11px;border:1px solid #e5dfd7;border-radius:6px;background:#fffefc;font-size:12.5px;cursor:pointer;color:{{ prevColor }}" style-hover="background:#f4efe9">Previous</button>
+                      <sc-for list="{{ pages }}" as="p" hint-placeholder-count="2">
+                        <button onClick="{{ p.go }}" style="min-width:30px;padding:6px 8px;border:1px solid {{ p.border }};border-radius:6px;background:{{ p.bg }};color:{{ p.fg }};font-size:12.5px;font-weight:600;cursor:pointer;font-family:'IBM Plex Mono',monospace">{{ p.n }}</button>
+                      </sc-for>
+                      <button onClick="{{ nextPage }}" disabled="{{ onLastPage }}" style="padding:6px 11px;border:1px solid #e5dfd7;border-radius:6px;background:#fffefc;font-size:12.5px;cursor:pointer;color:{{ nextColor }}" style-hover="background:#f4efe9">Next</button>
+                    </div>
+                  </div>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ filteredToNothing }}" hint-placeholder-val="{{ false }}">
+                <div style="padding:52px 24px;text-align:center">
+                  <div style="width:42px;height:42px;margin:0 auto 14px auto;border:1.6px solid #d6cdc2;border-radius:50%;position:relative">
+                    <span style="position:absolute;left:50%;top:50%;width:20px;height:1.6px;background:#d6cdc2;transform:translate(-50%,-50%) rotate(-45deg);display:block"></span>
+                  </div>
+                  <div style="font-size:15px;font-weight:600;margin-bottom:5px">No orders match these filters</div>
+                  <p style="margin:0 auto 18px auto;max-width:330px;font-size:13px;color:#7a736c">You have {{ totalOrders }} orders in total. Widen the filter to see them.</p>
+                  <button onClick="{{ clearFilters }}" style="padding:9px 16px;border:1px solid #b4502f;border-radius:7px;background:#fffefc;color:#b4502f;font-weight:600;font-size:13px;cursor:pointer" style-hover="background:#f9ece7">Clear filters</button>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ noOrdersAtAll }}" hint-placeholder-val="{{ false }}">
+                <div style="padding:64px 24px;text-align:center">
+                  <div style="width:56px;height:44px;margin:0 auto 18px auto;border:1.6px solid #d6cdc2;border-radius:6px;position:relative;background:#faf7f3">
+                    <span style="position:absolute;left:10px;right:10px;top:12px;height:1.6px;background:#e0d8ce;display:block"></span>
+                    <span style="position:absolute;left:10px;right:22px;top:22px;height:1.6px;background:#e0d8ce;display:block"></span>
+                  </div>
+                  <div style="font-size:16px;font-weight:600;margin-bottom:6px">Nothing ordered yet</div>
+                  <p style="margin:0 auto 20px auto;max-width:360px;font-size:13px;color:#7a736c">Describe the piece you need — format, length, keywords — and a writer picks it up from there. You will see it move through production on this page.</p>
+                  <button onClick="{{ goNew }}" style="padding:10px 18px;border:0;border-radius:7px;background:#b4502f;color:#fff;font-weight:600;font-size:13.5px;cursor:pointer" style-hover="background:#8f3d22">Order your first article</button>
+                </div>
+              </sc-if>
+            </div>
+
+            <div style="margin-top:12px;display:flex;align-items:center;gap:10px;font-size:12px;color:#a8a09a">
+              <label style="display:flex;align-items:center;gap:7px;cursor:pointer">
+                <input type="checkbox" checked="{{ edgeCases }}" onChange="{{ toggleEdge }}" style="accent-color:#b4502f;width:14px;height:14px;cursor:pointer" />
+                Include edge-case records (long title, overdue, four writers, no deadline)
+              </label>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isOrder }}" hint-placeholder-val="{{ false }}">
+          <div>
+            <sc-if value="{{ orderLoading }}" hint-placeholder-val="{{ false }}">
+              <div>
+                <div style="width:190px;height:10px;border-radius:3px;background:#ece6de;margin-bottom:18px;animation:pulse 1.4s ease-in-out infinite"></div>
+                <div style="width:420px;max-width:70%;height:24px;border-radius:4px;background:#ece6de;margin-bottom:24px;animation:pulse 1.4s ease-in-out infinite"></div>
+                <div style="display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:16px">
+                  <div style="height:320px;border:1px solid #e5dfd7;border-radius:10px;background:#fffefc"></div>
+                  <div style="height:320px;border:1px solid #e5dfd7;border-radius:10px;background:#fffefc"></div>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ orderNotFound }}" hint-placeholder-val="{{ false }}">
+              <div style="border:1px solid #e5dfd7;border-radius:10px;background:#fffefc;padding:60px 24px;text-align:center;max-width:520px;margin:24px auto">
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#a8a09a;margin-bottom:12px">404</div>
+                <div style="font-size:17px;font-weight:600;margin-bottom:8px">This order is not available</div>
+                <p style="margin:0 auto 20px auto;max-width:380px;font-size:13px;color:#7a736c">We could not find an order here under your account. If you followed a link from somewhere else, it may belong to a different client.</p>
+                <button onClick="{{ goTasks }}" style="padding:9px 16px;border:0;border-radius:7px;background:#b4502f;color:#fff;font-weight:600;font-size:13px;cursor:pointer" style-hover="background:#8f3d22">Back to My Tasks</button>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ orderReady }}" hint-placeholder-val="{{ false }}">
+              <div>
+                <div style="display:flex;align-items:center;gap:7px;font-size:12.5px;color:#8a8178;margin-bottom:14px">
+                  <button onClick="{{ goTasks }}" style="border:0;background:transparent;padding:0;color:#b4502f;font-size:12.5px;font-weight:500;cursor:pointer" style-hover="color:#8f3d22">Orders</button>
+                  <span style="color:#c9bfb2">›</span>
+                  <span style="font-family:'IBM Plex Mono',monospace">Order #{{ order.n }}</span>
+                </div>
+
+                <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:22px">
+                  <h1 style="margin:0;font-size:24px;font-weight:600;letter-spacing:-.02em;line-height:1.28;max-width:760px;text-wrap:pretty">{{ order.title }}</h1>
+                  <span style="flex:0 0 auto;margin-top:4px;display:inline-flex;align-items:center;padding:4px 11px;border-radius:20px;font-size:12px;font-weight:600;background:{{ order.badgeBg }};color:{{ order.badgeFg }}">{{ order.statusLabel }}</span>
+                  <sc-if value="{{ order.overdue }}" hint-placeholder-val="{{ false }}">
+                    <span style="flex:0 0 auto;margin-top:4px;display:inline-flex;align-items:center;padding:4px 11px;border-radius:20px;font-size:12px;font-weight:600;background:#fbe9e4;color:#a03a22;border:1px solid #f0cfc4">Overdue</span>
+                  </sc-if>
+                </div>
+
+                <div style="display:grid;grid-template-columns:minmax(0,1.42fr) minmax(0,1fr);gap:16px;align-items:start">
+
+                  <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
+
+                    <section style="border:1px solid {{ order.panelBorder }};border-radius:10px;background:{{ order.panelBg }};padding:22px;box-shadow:0 1px 2px rgba(28,25,23,.04)">
+                      <div style="display:flex;align-items:center;gap:9px;margin-bottom:8px">
+                        <span style="width:8px;height:8px;border-radius:50%;background:{{ order.badgeFg }};display:block"></span>
+                        <h2 style="margin:0;font-size:15.5px;font-weight:600">{{ order.panelTitle }}</h2>
+                      </div>
+                      <p style="margin:0;font-size:13.5px;color:#57534e;max-width:60ch;text-wrap:pretty">{{ order.panelBody }}</p>
+
+                      <sc-if value="{{ order.hasDeliverable }}" hint-placeholder-val="{{ false }}">
+                        <div style="margin-top:18px;display:flex;align-items:center;gap:14px;padding:14px;border:1px solid #e5dfd7;border-radius:8px;background:#fffefc">
+                          <div style="flex:0 0 36px;width:36px;height:44px;border:1px solid #d6cdc2;border-radius:4px;background:#f7f4f0;position:relative">
+                            <span style="position:absolute;bottom:5px;left:4px;right:4px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:500;color:#57534e;letter-spacing:.04em">{{ order.fileExt }}</span>
+                          </div>
+                          <div style="min-width:0;flex:1">
+                            <div style="display:flex;align-items:baseline;gap:2px;font-size:13px;font-weight:500">
+                              <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">{{ order.fileStem }}</span>
+                              <span style="flex:0 0 auto;color:#57534e">{{ order.fileSuffix }}</span>
+                            </div>
+                            <div style="font-size:11.5px;color:#a8a09a;font-family:'IBM Plex Mono',monospace;margin-top:3px">Uploaded {{ order.uploadedAt }}</div>
+                          </div>
+                          <button onClick="{{ noop }}" style="flex:0 0 auto;padding:9px 15px;border:0;border-radius:7px;background:#b4502f;color:#fff;font-size:13px;font-weight:600;cursor:pointer" style-hover="background:#8f3d22">Download</button>
+                        </div>
+                      </sc-if>
+
+                      <sc-if value="{{ order.isDraft }}" hint-placeholder-val="{{ false }}">
+                        <div style="margin-top:18px;display:flex;gap:10px">
+                          <button onClick="{{ noop }}" style="padding:9px 15px;border:0;border-radius:7px;background:#b4502f;color:#fff;font-size:13px;font-weight:600;cursor:pointer" style-hover="background:#8f3d22">Submit this order</button>
+                          <button onClick="{{ goNew }}" style="padding:9px 15px;border:1px solid #e5dfd7;border-radius:7px;background:#fffefc;color:#1c1917;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#f4efe9">Edit the brief</button>
+                        </div>
+                      </sc-if>
+                    </section>
+
+                    <section style="border:1px solid #e5dfd7;border-radius:10px;background:#fffefc;padding:22px;box-shadow:0 1px 2px rgba(28,25,23,.04)">
+                      <h2 style="margin:0 0 12px 0;font-size:13px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#8a8178">Original brief</h2>
+                      <p style="margin:0;font-size:14px;line-height:1.65;color:#292524;max-width:68ch;white-space:pre-line;text-wrap:pretty">{{ order.brief }}</p>
+                      <sc-if value="{{ order.hasKeywords }}" hint-placeholder-val="{{ true }}">
+                        <div style="margin-top:20px;padding-top:16px;border-top:1px solid #f0ebe4">
+                          <div style="font-size:11.5px;color:#8a8178;margin-bottom:9px">Keywords</div>
+                          <div style="display:flex;flex-wrap:wrap;gap:6px">
+                            <sc-for list="{{ order.keywords }}" as="k" hint-placeholder-count="3">
+                              <span style="padding:4px 10px;border-radius:6px;background:#f4efe9;border:1px solid #e9e1d7;font-size:12px;color:#44403c;font-family:'IBM Plex Mono',monospace">{{ k }}</span>
+                            </sc-for>
+                          </div>
+                        </div>
+                      </sc-if>
+                    </section>
+                  </div>
+
+                  <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
+                    <section style="border:1px solid #e5dfd7;border-radius:10px;background:#fffefc;padding:18px 20px;box-shadow:0 1px 2px rgba(28,25,23,.04)">
+                      <h2 style="margin:0 0 14px 0;font-size:13px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#8a8178">Details</h2>
+                      <sc-for list="{{ order.details }}" as="d" hint-placeholder-count="6">
+                        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:14px;padding:8px 0;border-bottom:1px solid #f7f3ee">
+                          <span style="font-size:12.5px;color:#8a8178;flex:0 0 auto">{{ d.label }}</span>
+                          <span style="font-size:13px;font-weight:500;text-align:right;color:{{ d.color }};font-family:{{ d.font }}">{{ d.value }}</span>
+                        </div>
+                      </sc-for>
+                      <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 0 0 0">
+                        <span style="font-size:12.5px;color:#8a8178">Writers</span>
+                        <div style="display:flex;align-items:center">
+                          <sc-for list="{{ order.avatars }}" as="a" hint-placeholder-count="1">
+                            <span title="{{ a.name }}" style="width:26px;height:26px;border-radius:50%;background:{{ a.bg }};color:#fff;font-size:10.5px;font-weight:600;display:flex;align-items:center;justify-content:center;border:2px solid #fffefc;margin-left:-6px">{{ a.initials }}</span>
+                          </sc-for>
+                          <sc-if value="{{ order.hasOverflow }}" hint-placeholder-val="{{ false }}">
+                            <span style="width:26px;height:26px;border-radius:50%;background:#ece6de;color:#57534e;font-size:10.5px;font-weight:600;display:flex;align-items:center;justify-content:center;border:2px solid #fffefc;margin-left:-6px;font-family:'IBM Plex Mono',monospace">{{ order.overflowLabel }}</span>
+                          </sc-if>
+                          <sc-if value="{{ order.unassigned }}" hint-placeholder-val="{{ false }}">
+                            <span style="font-size:12.5px;color:#a8a09a">Not yet assigned</span>
+                          </sc-if>
+                        </div>
+                      </div>
+                    </section>
+
+                    <section style="border:1px solid #e5dfd7;border-radius:10px;background:#fffefc;padding:18px 20px 20px 20px;box-shadow:0 1px 2px rgba(28,25,23,.04)">
+                      <h2 style="margin:0 0 16px 0;font-size:13px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#8a8178">History</h2>
+                      <sc-for list="{{ order.events }}" as="e" hint-placeholder-count="4">
+                        <div style="display:grid;grid-template-columns:18px minmax(0,1fr);gap:12px">
+                          <div style="display:flex;flex-direction:column;align-items:center">
+                            <span style="width:9px;height:9px;border-radius:50%;background:{{ e.dot }};margin-top:4px;flex:0 0 9px;box-shadow:0 0 0 3px {{ e.ring }}"></span>
+                            <span style="flex:1;width:1px;background:{{ e.lineColor }};display:block"></span>
+                          </div>
+                          <div style="padding-bottom:16px">
+                            <div style="font-size:13px;font-weight:500;color:#1c1917;text-wrap:pretty">{{ e.label }}</div>
+                            <div style="font-size:11.5px;color:#a8a09a;font-family:'IBM Plex Mono',monospace;margin-top:2px">{{ e.date }}</div>
+                          </div>
+                        </div>
+                      </sc-for>
+                    </section>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isInbox }}" hint-placeholder-val="{{ false }}">
+          <div style="max-width:760px">
+            <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:18px">
+              <div>
+                <h1 style="margin:0 0 4px 0;font-size:24px;font-weight:600;letter-spacing:-.02em">Inbox</h1>
+                <p style="margin:0;color:#8a8178;font-size:13.5px">{{ inboxSubtitle }}</p>
+              </div>
+              <sc-if value="{{ hasUnread }}" hint-placeholder-val="{{ true }}">
+                <button onClick="{{ markAllRead }}" style="padding:9px 14px;border:1px solid #e5dfd7;border-radius:7px;background:#fffefc;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap" style-hover="background:#f4efe9">Mark all as read</button>
+              </sc-if>
+            </div>
+
+            <div style="border:1px solid #e5dfd7;border-radius:10px;background:#fffefc;overflow:hidden;box-shadow:0 1px 2px rgba(28,25,23,.04)">
+              <sc-if value="{{ isLoading }}" hint-placeholder-val="{{ false }}">
+                <div>
+                  <sc-for list="{{ skeletonRows }}" as="s" hint-placeholder-count="5">
+                    <div style="display:flex;gap:14px;padding:16px;border-bottom:1px solid #f7f3ee">
+                      <div style="width:30px;height:30px;border-radius:7px;background:#ece6de;animation:pulse 1.4s ease-in-out infinite"></div>
+                      <div style="flex:1"><div style="width:70%;height:10px;border-radius:3px;background:#ece6de;animation:pulse 1.4s ease-in-out infinite"></div><div style="width:90px;height:9px;border-radius:3px;background:#ece6de;margin-top:8px;animation:pulse 1.4s ease-in-out infinite"></div></div>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
+              <sc-if value="{{ inboxReady }}" hint-placeholder-val="{{ true }}">
+                <div>
+                  <sc-for list="{{ notifications }}" as="nt" hint-placeholder-count="5">
+                    <div onClick="{{ nt.open }}" style="display:flex;gap:14px;align-items:flex-start;padding:15px 18px;border-bottom:1px solid #f7f3ee;background:{{ nt.bg }};cursor:{{ nt.cursor }}" style-hover="background:#faf7f3">
+                      <span style="flex:0 0 30px;width:30px;height:30px;border-radius:7px;background:{{ nt.iconBg }};color:{{ nt.iconFg }};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;font-family:'IBM Plex Mono',monospace">{{ nt.glyph }}</span>
+                      <div style="flex:1;min-width:0">
+                        <div style="font-size:13.5px;font-weight:{{ nt.weight }};color:#1c1917;text-wrap:pretty">{{ nt.title }}</div>
+                        <div style="display:flex;align-items:center;gap:10px;margin-top:4px">
+                          <span style="font-size:11.5px;color:#a8a09a;font-family:'IBM Plex Mono',monospace">{{ nt.date }}</span>
+                          <sc-if value="{{ nt.linked }}" hint-placeholder-val="{{ true }}">
+                            <span style="font-size:11.5px;color:#b4502f;font-weight:500">View order</span>
+                          </sc-if>
+                        </div>
+                      </div>
+                      <sc-if value="{{ nt.unread }}" hint-placeholder-val="{{ false }}">
+                        <span style="flex:0 0 8px;width:8px;height:8px;border-radius:50%;background:#b4502f;margin-top:9px"></span>
+                      </sc-if>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
+              <sc-if value="{{ inboxEmpty }}" hint-placeholder-val="{{ false }}">
+                <div style="padding:56px 24px;text-align:center">
+                  <div style="font-size:15px;font-weight:600;margin-bottom:5px">Nothing to read</div>
+                  <p style="margin:0 auto;max-width:330px;font-size:13px;color:#7a736c">When a writer picks up your order or delivers a piece, the update lands here.</p>
+                </div>
+              </sc-if>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isNew }}" hint-placeholder-val="{{ false }}">
+          <div style="max-width:720px">
+            <div style="margin-bottom:20px">
+              <button onClick="{{ goTasks }}" style="border:0;background:transparent;padding:0;color:#b4502f;font-size:12.5px;font-weight:500;cursor:pointer;margin-bottom:10px" style-hover="color:#8f3d22">← Back to My Tasks</button>
+              <h1 style="margin:0 0 4px 0;font-size:24px;font-weight:600;letter-spacing:-.02em">Order an article</h1>
+              <p style="margin:0;color:#8a8178;font-size:13.5px">Saved as a draft first. A writer picks it up once you submit.</p>
+            </div>
+
+            <sc-if value="{{ formBanner }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid #f0cfc4;background:#fbe9e4;border-radius:8px;margin-bottom:16px">
+                <span style="width:18px;height:18px;border-radius:50%;background:#a03a22;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:0 0 18px">!</span>
+                <span style="font-size:13.5px;font-weight:600;color:#8a2d17">Check the details below</span>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ prefilled }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1px solid #e0d8ce;background:#faf7f3;border-radius:8px;margin-bottom:16px">
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;border:1px solid #d6cdc2;border-radius:4px;padding:2px 6px;color:#57534e;flex:0 0 auto;margin-top:1px">Pre-filled</span>
+                <span style="font-size:13px;color:#57534e">Word count, format and tone come from your saved order defaults. Change any of them for this order — it will not affect your defaults.</span>
+              </div>
+            </sc-if>
+
+            <div style="border:1px solid #e5dfd7;border-radius:10px;background:#fffefc;padding:24px;box-shadow:0 1px 2px rgba(28,25,23,.04);display:flex;flex-direction:column;gap:20px">
+
+              <div>
+                <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:6px">
+                  <label style="font-size:13px;font-weight:600">Title</label>
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:{{ titleCountColor }}">{{ titleCount }}</span>
+                </div>
+                <input value="{{ form.title }}" onChange="{{ setTitle }}" placeholder="What should the piece be called?" style="width:100%;padding:10px 12px;border:1px solid {{ titleBorder }};border-radius:7px;background:#fffefc;font-size:14px;color:#1c1917;outline:none" style-focus="border-color:#b4502f;box-shadow:0 0 0 3px rgba(180,80,47,.16)" />
+                <sc-if value="{{ errTitle }}" hint-placeholder-val="{{ false }}">
+                  <div style="font-size:12.5px;color:#a03a22;margin-top:6px">{{ errTitleMsg }}</div>
+                </sc-if>
+              </div>
+
+              <div>
+                <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:6px">
+                  <label style="font-size:13px;font-weight:600">Brief</label>
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:{{ briefCountColor }}">{{ briefCount }}</span>
+                </div>
+                <textarea value="{{ form.brief }}" onChange="{{ setBrief }}" rows="6" placeholder="Audience, angle, anything the writer should read first" style="width:100%;padding:10px 12px;border:1px solid {{ briefBorder }};border-radius:7px;background:#fffefc;font-size:14px;line-height:1.6;color:#1c1917;outline:none;resize:vertical" style-focus="border-color:#b4502f;box-shadow:0 0 0 3px rgba(180,80,47,.16)"></textarea>
+                <sc-if value="{{ errBrief }}" hint-placeholder-val="{{ false }}">
+                  <div style="font-size:12.5px;color:#a03a22;margin-top:6px">{{ errBriefMsg }}</div>
+                </sc-if>
+              </div>
+
+              <div>
+                <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:6px">
+                  <label style="font-size:13px;font-weight:600">Keywords</label>
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:{{ kwCountColor }}">{{ kwCount }}</span>
+                </div>
+                <input value="{{ form.keywords }}" onChange="{{ setKeywords }}" placeholder="Comma separated, up to ten" style="width:100%;padding:10px 12px;border:1px solid {{ kwBorder }};border-radius:7px;background:#fffefc;font-size:14px;color:#1c1917;outline:none" style-focus="border-color:#b4502f;box-shadow:0 0 0 3px rgba(180,80,47,.16)" />
+                <sc-if value="{{ hasChips }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:9px">
+                    <sc-for list="{{ chips }}" as="c" hint-placeholder-count="3">
+                      <span style="padding:4px 10px;border-radius:6px;background:#f4efe9;border:1px solid #e9e1d7;font-size:12px;color:#44403c;font-family:'IBM Plex Mono',monospace">{{ c }}</span>
+                    </sc-for>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ errKw }}" hint-placeholder-val="{{ false }}">
+                  <div style="font-size:12.5px;color:#a03a22;margin-top:6px">Use 10 keywords or fewer</div>
+                </sc-if>
+              </div>
+
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+                <div>
+                  <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">Format</label>
+                  <select value="{{ form.format }}" onChange="{{ setFormat }}" style="width:100%;padding:10px 12px;border:1px solid {{ formatBorder }};border-radius:7px;background:#fffefc;font-size:14px;color:#1c1917;cursor:pointer;outline:none" style-focus="border-color:#b4502f;box-shadow:0 0 0 3px rgba(180,80,47,.16)">
+                    <option value="">Choose a format</option>
+                    <option value="Blog post">Blog post</option>
+                    <option value="Whitepaper">Whitepaper</option>
+                    <option value="Case study">Case study</option>
+                    <option value="Newsletter">Newsletter</option>
+                    <option value="Landing page">Landing page</option>
+                  </select>
+                  <sc-if value="{{ errFormat }}" hint-placeholder-val="{{ false }}">
+                    <div style="font-size:12.5px;color:#a03a22;margin-top:6px">Choose a format</div>
+                  </sc-if>
+                </div>
+                <div>
+                  <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">Word count</label>
+                  <input value="{{ form.words }}" onChange="{{ setWords }}" placeholder="1500" style="width:100%;padding:10px 12px;border:1px solid {{ wordsBorder }};border-radius:7px;background:#fffefc;font-size:14px;color:#1c1917;outline:none;font-family:'IBM Plex Mono',monospace" style-focus="border-color:#b4502f;box-shadow:0 0 0 3px rgba(180,80,47,.16)" />
+                  <sc-if value="{{ errWords }}" hint-placeholder-val="{{ false }}">
+                    <div style="font-size:12.5px;color:#a03a22;margin-top:6px">{{ errWordsMsg }}</div>
+                  </sc-if>
+                  <sc-if value="{{ wordsHintOk }}" hint-placeholder-val="{{ true }}">
+                    <div style="font-size:12px;color:#a8a09a;margin-top:6px">100–10,000 words</div>
+                  </sc-if>
+                </div>
+              </div>
+
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+                <div>
+                  <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">Deadline <span style="font-weight:400;color:#a8a09a">optional</span></label>
+                  <input type="date" value="{{ form.deadline }}" onChange="{{ setDeadline }}" style="width:100%;padding:10px 12px;border:1px solid #e5dfd7;border-radius:7px;background:#fffefc;font-size:14px;color:#1c1917;outline:none;font-family:'IBM Plex Mono',monospace" style-focus="border-color:#b4502f;box-shadow:0 0 0 3px rgba(180,80,47,.16)" />
+                  <div style="font-size:12px;color:#a8a09a;margin-top:6px">Leave empty for “whenever you can”</div>
+                </div>
+              </div>
+
+              <div style="display:flex;align-items:center;gap:12px;padding-top:6px;border-top:1px solid #f0ebe4">
+                <button onClick="{{ submitOrder }}" disabled="{{ submitting }}" style="padding:11px 18px;border:0;border-radius:7px;background:{{ submitBg }};color:#fff;font-size:13.5px;font-weight:600;cursor:{{ submitCursor }};display:inline-flex;align-items:center;gap:9px" style-hover="background:#8f3d22">
+                  <sc-if value="{{ submitting }}" hint-placeholder-val="{{ false }}">
+                    <span style="width:13px;height:13px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;display:block;animation:spin .7s linear infinite"></span>
+                  </sc-if>
+                  {{ submitLabel }}
+                </button>
+                <button onClick="{{ goTasks }}" style="padding:11px 16px;border:1px solid #e5dfd7;border-radius:7px;background:#fffefc;font-size:13.5px;font-weight:500;cursor:pointer" style-hover="background:#f4efe9">Cancel</button>
+                <span style="margin-left:auto;font-size:12px;color:#a8a09a">Saved as Draft</span>
+              </div>
+            </div>
+
+            <div style="margin-top:12px;display:flex;gap:16px;font-size:12px;color:#a8a09a;flex-wrap:wrap">
+              <label style="display:flex;align-items:center;gap:7px;cursor:pointer">
+                <input type="checkbox" checked="{{ prefilled }}" onChange="{{ togglePrefill }}" style="accent-color:#b4502f;width:14px;height:14px;cursor:pointer" />Use my saved defaults
+              </label>
+              <button onClick="{{ fillSample }}" style="border:0;background:transparent;padding:0;color:#b4502f;font-size:12px;font-weight:600;cursor:pointer">Fill with a realistic brief</button>
+              <button onClick="{{ showErrors }}" style="border:0;background:transparent;padding:0;color:#b4502f;font-size:12px;font-weight:600;cursor:pointer">Show validation errors</button>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isSettings }}" hint-placeholder-val="{{ false }}">
+          <div style="max-width:880px">
+            <div style="font-size:12.5px;color:#8a8178;margin-bottom:12px">Reached from your avatar menu, top right.</div>
+            <h1 style="margin:0 0 18px 0;font-size:24px;font-weight:600;letter-spacing:-.02em">Settings</h1>
+
+            <div style="display:grid;grid-template-columns:200px minmax(0,1fr);gap:24px;align-items:start">
+              <nav style="display:flex;flex-direction:column;gap:2px;position:sticky;top:88px">
+                <sc-for list="{{ settingsTabs }}" as="t" hint-placeholder-count="4">
+                  <button onClick="{{ t.go }}" style="text-align:left;padding:9px 11px;border:0;border-radius:7px;cursor:pointer;font-size:13px;font-weight:500;background:{{ t.bg }};color:{{ t.fg }}" style-hover="background:#f2ede7">{{ t.label }}</button>
+                </sc-for>
+              </nav>
+
+              <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
+                <sc-if value="{{ savedToast }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;align-items:center;gap:10px;padding:11px 14px;border:1px solid #cfe3d6;background:#e9f4ee;border-radius:8px">
+                    <span style="width:18px;height:18px;border-radius:50%;background:#2f6a4a;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:0 0 18px">✓</span>
+                    <span style="font-size:13.5px;font-weight:600;color:#1f4d3a">{{ savedMessage }}</span>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ tabProfile }}" hint-placeholder-val="{{ true }}">
+                  <section style="border:1px solid #e5dfd7;border-radius:10px;background:#fffefc;padding:22px;box-shadow:0 1px 2px rgba(28,25,23,.04)">
+                    <h2 style="margin:0 0 4px 0;font-size:15px;font-weight:600">Profile</h2>
+                    <p style="margin:0 0 20px 0;font-size:13px;color:#8a8178">How your name appears on orders.</p>
+                    <div style="display:flex;flex-direction:column;gap:18px;max-width:440px">
+                      <div>
+                        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">Full name</label>
+                        <input value="{{ profileForm.fullName }}" onChange="{{ setPName }}" style="width:100%;padding:10px 12px;border:1px solid #e5dfd7;border-radius:7px;background:#fffefc;font-size:14px;outline:none" style-focus="border-color:#b4502f;box-shadow:0 0 0 3px rgba(180,80,47,.16)" />
+                      </div>
+                      <div>
+                        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">Company</label>
+                        <input value="{{ profileForm.company }}" onChange="{{ setPCompany }}" style="width:100%;padding:10px 12px;border:1px solid #e5dfd7;border-radius:7px;background:#fffefc;font-size:14px;outline:none" style-focus="border-color:#b4502f;box-shadow:0 0 0 3px rgba(180,80,47,.16)" />
+                      </div>
+                      <div>
+                        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">Avatar URL <span style="font-weight:400;color:#a8a09a">optional</span></label>
+                        <input value="{{ profileForm.avatarUrl }}" onChange="{{ setPAvatar }}" placeholder="https://" style="width:100%;padding:10px 12px;border:1px solid #e5dfd7;border-radius:7px;background:#fffefc;font-size:14px;outline:none;font-family:'IBM Plex Mono',monospace" style-focus="border-color:#b4502f;box-shadow:0 0 0 3px rgba(180,80,47,.16)" />
+                        <div style="font-size:12px;color:#a8a09a;margin-top:6px">Leave empty and we show your initials.</div>
+                      </div>
+                      <div>
+                        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">Email</label>
+                        <input value="{{ profile.email }}" disabled="{{ trueVal }}" style="width:100%;padding:10px 12px;border:1px solid #ece6de;border-radius:7px;background:#f7f4f0;font-size:14px;color:#8a8178;font-family:'IBM Plex Mono',monospace;cursor:not-allowed" />
+                        <div style="font-size:12px;color:#a8a09a;margin-top:6px">Contact us to change the email on the account.</div>
+                      </div>
+                    </div>
+                    <div style="margin-top:22px;padding-top:16px;border-top:1px solid #f0ebe4">
+                      <button onClick="{{ saveProfile }}" disabled="{{ saving }}" style="padding:10px 17px;border:0;border-radius:7px;background:{{ saveBg }};color:#fff;font-size:13.5px;font-weight:600;cursor:{{ submitCursor }};display:inline-flex;align-items:center;gap:9px" style-hover="background:#8f3d22">
+                        <sc-if value="{{ saving }}" hint-placeholder-val="{{ false }}">
+                          <span style="width:13px;height:13px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;display:block;animation:spin .7s linear infinite"></span>
+                        </sc-if>
+                        {{ saveLabel }}
+                      </button>
+                    </div>
+                  </section>
+                </sc-if>
+
+                <sc-if value="{{ tabNotif }}" hint-placeholder-val="{{ false }}">
+                  <section style="border:1px solid #e5dfd7;border-radius:10px;background:#fffefc;padding:22px;box-shadow:0 1px 2px rgba(28,25,23,.04)">
+                    <h2 style="margin:0 0 4px 0;font-size:15px;font-weight:600">Notifications</h2>
+                    <p style="margin:0 0 8px 0;font-size:13px;color:#8a8178">What we email you about. Everything still shows in your inbox.</p>
+                    <sc-for list="{{ notifToggles }}" as="n" hint-placeholder-count="3">
+                      <div style="display:flex;align-items:center;justify-content:space-between;gap:20px;padding:15px 0;border-top:1px solid #f0ebe4">
+                        <div>
+                          <div style="font-size:13.5px;font-weight:500">{{ n.label }}</div>
+                          <div style="font-size:12.5px;color:#8a8178;margin-top:2px">{{ n.help }}</div>
+                        </div>
+                        <button onClick="{{ n.toggle }}" style="flex:0 0 42px;width:42px;height:24px;border-radius:12px;border:0;background:{{ n.track }};position:relative;cursor:pointer;transition:background .15s">
+                          <span style="position:absolute;top:3px;left:{{ n.knobLeft }};width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(28,25,23,.3);transition:left .15s;display:block"></span>
+                        </button>
+                      </div>
+                    </sc-for>
+                  </section>
+                </sc-if>
+
+                <sc-if value="{{ tabDefaults }}" hint-placeholder-val="{{ false }}">
+                  <section style="border:1px solid #e5dfd7;border-radius:10px;background:#fffefc;padding:22px;box-shadow:0 1px 2px rgba(28,25,23,.04)">
+                    <h2 style="margin:0 0 4px 0;font-size:15px;font-weight:600">Order defaults</h2>
+                    <p style="margin:0 0 20px 0;font-size:13px;color:#8a8178">All optional. These pre-fill the order form; you can change them on any order.</p>
+                    <div style="display:flex;flex-direction:column;gap:18px;max-width:440px">
+                      <div>
+                        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">Default word count</label>
+                        <input value="{{ defaultsForm.words }}" onChange="{{ setDWords }}" style="width:100%;padding:10px 12px;border:1px solid #e5dfd7;border-radius:7px;background:#fffefc;font-size:14px;outline:none;font-family:'IBM Plex Mono',monospace" style-focus="border-color:#b4502f;box-shadow:0 0 0 3px rgba(180,80,47,.16)" />
+                      </div>
+                      <div>
+                        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">Default format</label>
+                        <select value="{{ defaultsForm.format }}" onChange="{{ setDFormat }}" style="width:100%;padding:10px 12px;border:1px solid #e5dfd7;border-radius:7px;background:#fffefc;font-size:14px;cursor:pointer;outline:none">
+                          <option value="">No default</option>
+                          <option value="Blog post">Blog post</option>
+                          <option value="Whitepaper">Whitepaper</option>
+                          <option value="Case study">Case study</option>
+                          <option value="Newsletter">Newsletter</option>
+                          <option value="Landing page">Landing page</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">Default tone</label>
+                        <input value="{{ defaultsForm.tone }}" onChange="{{ setDTone }}" placeholder="e.g. practical, plain-spoken" style="width:100%;padding:10px 12px;border:1px solid #e5dfd7;border-radius:7px;background:#fffefc;font-size:14px;outline:none" style-focus="border-color:#b4502f;box-shadow:0 0 0 3px rgba(180,80,47,.16)" />
+                      </div>
+                    </div>
+                    <div style="margin-top:22px;padding-top:16px;border-top:1px solid #f0ebe4">
+                      <button onClick="{{ saveDefaults }}" style="padding:10px 17px;border:0;border-radius:7px;background:#b4502f;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer" style-hover="background:#8f3d22">Save defaults</button>
+                    </div>
+                  </section>
+                </sc-if>
+
+                <sc-if value="{{ tabPassword }}" hint-placeholder-val="{{ false }}">
+                  <section style="border:1px solid #e5dfd7;border-radius:10px;background:#fffefc;padding:22px;box-shadow:0 1px 2px rgba(28,25,23,.04)">
+                    <h2 style="margin:0 0 4px 0;font-size:15px;font-weight:600">Password</h2>
+                    <p style="margin:0 0 20px 0;font-size:13px;color:#8a8178">At least 8 characters.</p>
+                    <div style="display:flex;flex-direction:column;gap:18px;max-width:440px">
+                      <div>
+                        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">New password</label>
+                        <input type="password" value="{{ pwForm.a }}" onChange="{{ setPwA }}" style="width:100%;padding:10px 12px;border:1px solid {{ pwBorderA }};border-radius:7px;background:#fffefc;font-size:14px;outline:none" style-focus="border-color:#b4502f;box-shadow:0 0 0 3px rgba(180,80,47,.16)" />
+                        <sc-if value="{{ pwShort }}" hint-placeholder-val="{{ false }}">
+                          <div style="font-size:12.5px;color:#a03a22;margin-top:6px">Password must be at least 8 characters</div>
+                        </sc-if>
+                      </div>
+                      <div>
+                        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">Confirm new password</label>
+                        <input type="password" value="{{ pwForm.b }}" onChange="{{ setPwB }}" style="width:100%;padding:10px 12px;border:1px solid {{ pwBorderB }};border-radius:7px;background:#fffefc;font-size:14px;outline:none" style-focus="border-color:#b4502f;box-shadow:0 0 0 3px rgba(180,80,47,.16)" />
+                        <sc-if value="{{ pwMismatch }}" hint-placeholder-val="{{ false }}">
+                          <div style="font-size:12.5px;color:#a03a22;margin-top:6px">Passwords do not match</div>
+                        </sc-if>
+                      </div>
+                    </div>
+                    <div style="margin-top:22px;padding-top:16px;border-top:1px solid #f0ebe4">
+                      <button onClick="{{ savePassword }}" style="padding:10px 17px;border:0;border-radius:7px;background:#b4502f;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer" style-hover="background:#8f3d22">Update password</button>
+                    </div>
+                  </section>
+                </sc-if>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isFoundations }}" hint-placeholder-val="{{ false }}">
+          <div style="max-width:980px">
+            <h1 style="margin:0 0 4px 0;font-size:24px;font-weight:600;letter-spacing:-.02em">Design foundations</h1>
+            <p style="margin:0 0 24px 0;color:#8a8178;font-size:13.5px">The pieces every screen reuses. Token values are in <span style="font-family:'IBM Plex Mono',monospace">HANDOFF/04-tokens.md</span>.</p>
+
+            <div style="display:flex;flex-direction:column;gap:16px">
+
+              <section style="border:1px solid #e5dfd7;border-radius:10px;background:#fffefc;padding:20px">
+                <h2 style="margin:0 0 14px 0;font-size:13px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#8a8178">F1 · Status badges</h2>
+                <div style="display:flex;gap:10px;flex-wrap:wrap">
+                  <sc-for list="{{ allBadges }}" as="b" hint-placeholder-count="5">
+                    <span style="display:inline-flex;align-items:center;padding:4px 11px;border-radius:20px;font-size:12px;font-weight:600;background:{{ b.bg }};color:{{ b.fg }}">{{ b.label }}</span>
+                  </sc-for>
+                </div>
+              </section>
+
+              <section style="border:1px solid #e5dfd7;border-radius:10px;background:#fffefc;padding:20px">
+                <h2 style="margin:0 0 6px 0;font-size:13px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#8a8178">F2 · Priority</h2>
+                <p style="margin:0 0 14px 0;font-size:12.5px;color:#a8a09a">Read-only. Staff-set, client-readable — never a control.</p>
+                <div style="display:flex;gap:18px;flex-wrap:wrap">
+                  <sc-for list="{{ allPriorities }}" as="p" hint-placeholder-count="3">
+                    <span style="display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:500;color:#44403c">
+                      <span style="width:7px;height:7px;border-radius:2px;background:{{ p.color }};display:block"></span>{{ p.label }}
+                    </span>
+                  </sc-for>
+                </div>
+              </section>
+
+              <section style="border:1px solid #e5dfd7;border-radius:10px;background:#fffefc;padding:20px">
+                <h2 style="margin:0 0 6px 0;font-size:13px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#8a8178">F3 · Assignee avatars</h2>
+                <p style="margin:0 0 14px 0;font-size:12.5px;color:#a8a09a">Initials are the default case — no fixture has an avatar URL. Beyond three, overflow as a count.</p>
+                <div style="display:flex;gap:32px;flex-wrap:wrap">
+                  <sc-for list="{{ avatarDemo }}" as="d" hint-placeholder-count="3">
+                    <div>
+                      <div style="display:flex;align-items:center;margin-bottom:8px">
+                        <sc-for list="{{ d.avatars }}" as="a" hint-placeholder-count="2">
+                          <span style="width:30px;height:30px;border-radius:50%;background:{{ a.bg }};color:#fff;font-size:11.5px;font-weight:600;display:flex;align-items:center;justify-content:center;border:2px solid #fffefc;margin-left:-7px">{{ a.initials }}</span>
+                        </sc-for>
+                        <sc-if value="{{ d.hasOverflow }}" hint-placeholder-val="{{ false }}">
+                          <span style="width:30px;height:30px;border-radius:50%;background:#ece6de;color:#57534e;font-size:11.5px;font-weight:600;display:flex;align-items:center;justify-content:center;border:2px solid #fffefc;margin-left:-7px;font-family:'IBM Plex Mono',monospace">{{ d.overflowLabel }}</span>
+                        </sc-if>
+                      </div>
+                      <div style="font-size:12px;color:#8a8178">{{ d.caption }}</div>
+                    </div>
+                  </sc-for>
+                </div>
+              </section>
+
+              <section style="border:1px solid #e5dfd7;border-radius:10px;background:#fffefc;padding:20px">
+                <h2 style="margin:0 0 14px 0;font-size:13px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#8a8178">F4 · Buttons</h2>
+                <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px 12px;align-items:center">
+                  <div style="font-size:11px;color:#a8a09a"></div>
+                  <div style="font-size:11px;color:#a8a09a;text-transform:uppercase;letter-spacing:.05em">Default</div>
+                  <div style="font-size:11px;color:#a8a09a;text-transform:uppercase;letter-spacing:.05em">Focus</div>
+                  <div style="font-size:11px;color:#a8a09a;text-transform:uppercase;letter-spacing:.05em">Disabled</div>
+                  <div style="font-size:11px;color:#a8a09a;text-transform:uppercase;letter-spacing:.05em">Loading</div>
+
+                  <div style="font-size:12.5px;font-weight:600">Primary</div>
+                  <div><button style="padding:9px 15px;border:0;border-radius:7px;background:#b4502f;color:#fff;font-size:13px;font-weight:600;cursor:pointer" style-hover="background:#8f3d22">Download</button></div>
+                  <div><button style="padding:9px 15px;border:0;border-radius:7px;background:#b4502f;color:#fff;font-size:13px;font-weight:600;box-shadow:0 0 0 3px rgba(180,80,47,.3)">Download</button></div>
+                  <div><button disabled="{{ trueVal }}" style="padding:9px 15px;border:0;border-radius:7px;background:#e0d8ce;color:#a8a09a;font-size:13px;font-weight:600;cursor:not-allowed">Download</button></div>
+                  <div><button style="padding:9px 15px;border:0;border-radius:7px;background:#8f3d22;color:#fff;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:8px"><span style="width:12px;height:12px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;display:block;animation:spin .7s linear infinite"></span>Working</button></div>
+
+                  <div style="font-size:12.5px;font-weight:600">Secondary</div>
+                  <div><button style="padding:9px 15px;border:1px solid #e5dfd7;border-radius:7px;background:#fffefc;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#f4efe9">Cancel</button></div>
+                  <div><button style="padding:9px 15px;border:1px solid #b4502f;border-radius:7px;background:#fffefc;font-size:13px;font-weight:500;box-shadow:0 0 0 3px rgba(180,80,47,.18)">Cancel</button></div>
+                  <div><button disabled="{{ trueVal }}" style="padding:9px 15px;border:1px solid #ece6de;border-radius:7px;background:#faf7f3;color:#bdb5ac;font-size:13px;font-weight:500;cursor:not-allowed">Cancel</button></div>
+                  <div><button style="padding:9px 15px;border:1px solid #e5dfd7;border-radius:7px;background:#fffefc;font-size:13px;font-weight:500;display:inline-flex;align-items:center;gap:8px;color:#8a8178"><span style="width:12px;height:12px;border:2px solid #e0d8ce;border-top-color:#8a8178;border-radius:50%;display:block;animation:spin .7s linear infinite"></span>Saving</button></div>
+
+                  <div style="font-size:12.5px;font-weight:600">Destructive</div>
+                  <div><button style="padding:9px 15px;border:1px solid #e8cdc2;border-radius:7px;background:#fffefc;color:#a03a22;font-size:13px;font-weight:600;cursor:pointer" style-hover="background:#fbe9e4">Sign out</button></div>
+                  <div><button style="padding:9px 15px;border:1px solid #a03a22;border-radius:7px;background:#fffefc;color:#a03a22;font-size:13px;font-weight:600;box-shadow:0 0 0 3px rgba(160,58,34,.18)">Sign out</button></div>
+                  <div><button disabled="{{ trueVal }}" style="padding:9px 15px;border:1px solid #ece6de;border-radius:7px;background:#faf7f3;color:#bdb5ac;font-size:13px;font-weight:600;cursor:not-allowed">Sign out</button></div>
+                  <div><button style="padding:9px 15px;border:1px solid #e8cdc2;border-radius:7px;background:#fffefc;color:#a03a22;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:8px"><span style="width:12px;height:12px;border:2px solid #f0cfc4;border-top-color:#a03a22;border-radius:50%;display:block;animation:spin .7s linear infinite"></span>Signing out</button></div>
+                </div>
+              </section>
+
+              <section style="border:1px solid #e5dfd7;border-radius:10px;background:#fffefc;padding:20px">
+                <h2 style="margin:0 0 14px 0;font-size:13px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#8a8178">F5 · Field states · F7 · Counters</h2>
+                <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px">
+                  <div>
+                    <label style="display:block;font-size:12.5px;font-weight:600;margin-bottom:6px">Default</label>
+                    <input placeholder="Placeholder" style="width:100%;padding:10px 12px;border:1px solid #e5dfd7;border-radius:7px;background:#fffefc;font-size:14px;outline:none" />
+                  </div>
+                  <div>
+                    <label style="display:block;font-size:12.5px;font-weight:600;margin-bottom:6px">Focus</label>
+                    <input value="Typing" style="width:100%;padding:10px 12px;border:1px solid #b4502f;border-radius:7px;background:#fffefc;font-size:14px;outline:none;box-shadow:0 0 0 3px rgba(180,80,47,.16)" />
+                  </div>
+                  <div>
+                    <label style="display:block;font-size:12.5px;font-weight:600;margin-bottom:6px">Error</label>
+                    <input value="ab" style="width:100%;padding:10px 12px;border:1px solid #c2543a;border-radius:7px;background:#fffefc;font-size:14px;outline:none" />
+                    <div style="font-size:12.5px;color:#a03a22;margin-top:6px">Give the article a title of at least 3 characters</div>
+                  </div>
+                  <div>
+                    <label style="display:block;font-size:12.5px;font-weight:600;margin-bottom:6px">Disabled</label>
+                    <input value="elena@harborline.io" disabled="{{ trueVal }}" style="width:100%;padding:10px 12px;border:1px solid #ece6de;border-radius:7px;background:#f7f4f0;font-size:14px;color:#8a8178;cursor:not-allowed;font-family:'IBM Plex Mono',monospace" />
+                  </div>
+                  <div>
+                    <div style="display:flex;justify-content:space-between;margin-bottom:6px"><label style="font-size:12.5px;font-weight:600">Near limit</label><span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8a5b00">112 / 120</span></div>
+                    <input value="A title that is running very close to the hundred and twenty character cap" style="width:100%;padding:10px 12px;border:1px solid #e5dfd7;border-radius:7px;background:#fffefc;font-size:14px;outline:none" />
+                  </div>
+                  <div>
+                    <div style="display:flex;justify-content:space-between;margin-bottom:6px"><label style="font-size:12.5px;font-weight:600">Over limit</label><span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#a03a22;font-weight:500">126 / 120</span></div>
+                    <input value="A title that has gone past the hundred and twenty character cap and now has to be cut back" style="width:100%;padding:10px 12px;border:1px solid #c2543a;border-radius:7px;background:#fffefc;font-size:14px;outline:none" />
+                    <div style="font-size:12.5px;color:#a03a22;margin-top:6px">Title must be 120 characters or fewer</div>
+                  </div>
+                </div>
+              </section>
+
+              <section style="border:1px solid #e5dfd7;border-radius:10px;background:#fffefc;padding:20px">
+                <h2 style="margin:0 0 14px 0;font-size:13px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#8a8178">F6 · Keyword input</h2>
+                <div style="display:flex;flex-direction:column;gap:18px;max-width:520px">
+                  <sc-for list="{{ keywordDemo }}" as="k" hint-placeholder-count="3">
+                    <div>
+                      <div style="font-size:12.5px;color:#8a8178;margin-bottom:7px">{{ k.caption }}</div>
+                      <input value="{{ k.raw }}" style="width:100%;padding:10px 12px;border:1px solid {{ k.border }};border-radius:7px;background:#fffefc;font-size:14px;outline:none" />
+                      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:9px">
+                        <sc-for list="{{ k.chips }}" as="c" hint-placeholder-count="3">
+                          <span style="padding:4px 10px;border-radius:6px;background:#f4efe9;border:1px solid #e9e1d7;font-size:12px;color:#44403c;font-family:'IBM Plex Mono',monospace">{{ c }}</span>
+                        </sc-for>
+                      </div>
+                    </div>
+                  </sc-for>
+                </div>
+              </section>
+
+              <section style="border:1px solid #e5dfd7;border-radius:10px;background:#fffefc;padding:20px">
+                <h2 style="margin:0 0 6px 0;font-size:13px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#8a8178">F8 · The three empty states</h2>
+                <p style="margin:0 0 14px 0;font-size:12.5px;color:#a8a09a">Different causes, different actions. Never the same screen.</p>
+                <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px">
+                  <sc-for list="{{ emptyStates }}" as="e" hint-placeholder-count="3">
+                    <div style="border:1px solid #f0ebe4;border-radius:8px;background:#faf7f3;padding:18px;text-align:center">
+                      <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#a8a09a;margin-bottom:10px">{{ e.id }}</div>
+                      <div style="font-size:13.5px;font-weight:600;margin-bottom:5px">{{ e.title }}</div>
+                      <p style="margin:0 0 14px 0;font-size:12.5px;color:#7a736c">{{ e.body }}</p>
+                      <span style="display:inline-block;padding:7px 13px;border-radius:7px;background:{{ e.btnBg }};color:{{ e.btnFg }};border:1px solid {{ e.btnBorder }};font-size:12.5px;font-weight:600">{{ e.action }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </section>
+
+              <section style="border:1px solid #e5dfd7;border-radius:10px;background:#fffefc;padding:20px">
+                <h2 style="margin:0 0 14px 0;font-size:13px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#8a8178">F9 · Demo-mode banner</h2>
+                <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#f8eed6;border:1px solid #ecdcb4;border-radius:8px;color:#7a5200;font-size:12.5px">
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;border:1px solid #d9bf85;border-radius:4px;padding:2px 6px">Demo data</span>
+                  <span>You are looking at sample orders. Nothing here is connected to a live database.</span>
+                </div>
+              </section>
+            </div>
+          </div>
+        </sc-if>
+
+      </div>
+    </main>
+  </div>
+
+  <sc-if value="{{ searchOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeSearch }}" style="position:fixed;inset:0;background:rgba(28,25,23,.34);z-index:60;display:flex;align-items:flex-start;justify-content:center;padding-top:12vh">
+      <div onClick="{{ stop }}" style="width:620px;max-width:92vw;background:#fffefc;border:1px solid #e5dfd7;border-radius:12px;box-shadow:0 24px 60px rgba(28,25,23,.28);overflow:hidden">
+        <div style="display:flex;align-items:center;gap:11px;padding:14px 16px;border-bottom:1px solid #f0ebe4">
+          <span style="width:14px;height:14px;border:1.7px solid #a8a09a;border-radius:50%;display:block"></span>
+          <input value="{{ searchQuery }}" onChange="{{ setSearchQuery }}" placeholder="Search orders by title or brief" style="flex:1;border:0;outline:none;background:transparent;font-size:15px" />
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;border:1px solid #e0d8ce;border-radius:4px;padding:2px 6px;color:#8a8178">esc</span>
+        </div>
+        <div style="max-height:50vh;overflow:auto">
+          <sc-if value="{{ searchHasResults }}" hint-placeholder-val="{{ true }}">
+            <div>
+              <sc-for list="{{ searchResults }}" as="r" hint-placeholder-count="4">
+                <button onClick="{{ r.open }}" style="display:block;width:100%;text-align:left;border:0;border-bottom:1px solid #f7f3ee;background:transparent;padding:12px 16px;cursor:pointer" style-hover="background:#faf7f3">
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#a8a09a">#{{ r.n }}</span>
+                    <span style="font-size:13.5px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r.title }}</span>
+                    <span style="margin-left:auto;flex:0 0 auto;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;background:{{ r.badgeBg }};color:{{ r.badgeFg }}">{{ r.statusLabel }}</span>
+                  </div>
+                </button>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ searchEmpty }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:30px 20px;text-align:center;font-size:13px;color:#8a8178">No orders match “{{ searchQuery }}”</div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <div style="position:fixed;bottom:16px;right:16px;z-index:70;font-size:12px">
+    <sc-if value="{{ trayOpen }}" hint-placeholder-val="{{ false }}">
+      <div style="width:262px;background:#1c1917;color:#f7f4f0;border-radius:10px;padding:14px;box-shadow:0 12px 36px rgba(28,25,23,.36)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;opacity:.6">Prototype states</span>
+          <button onClick="{{ toggleTray }}" style="border:0;background:transparent;color:#f7f4f0;cursor:pointer;font-size:14px;line-height:1;padding:0;opacity:.6">×</button>
+        </div>
+        <div style="font-size:10.5px;opacity:.55;margin-bottom:6px;font-family:'IBM Plex Mono',monospace">Data state</div>
+        <div style="display:flex;gap:5px;margin-bottom:12px;flex-wrap:wrap">
+          <sc-for list="{{ dataStates }}" as="d" hint-placeholder-count="4">
+            <button onClick="{{ d.go }}" style="padding:5px 9px;border:1px solid {{ d.border }};border-radius:6px;background:{{ d.bg }};color:{{ d.fg }};font-size:11.5px;cursor:pointer">{{ d.label }}</button>
+          </sc-for>
+        </div>
+        <div style="font-size:10.5px;opacity:.55;margin-bottom:6px;font-family:'IBM Plex Mono',monospace">Flags</div>
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <sc-for list="{{ flags }}" as="f" hint-placeholder-count="4">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px">
+              <input type="checkbox" checked="{{ f.on }}" onChange="{{ f.toggle }}" style="accent-color:#d4713f;width:13px;height:13px;cursor:pointer" />{{ f.label }}
+            </label>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ trayClosed }}" hint-placeholder-val="{{ true }}">
+      <button onClick="{{ toggleTray }}" style="padding:8px 13px;border:0;border-radius:8px;background:#1c1917;color:#f7f4f0;font-size:11.5px;font-family:'IBM Plex Mono',monospace;letter-spacing:.04em;cursor:pointer;box-shadow:0 6px 20px rgba(28,25,23,.3)">states</button>
+    </sc-if>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:960}}">
+const TODAY = '2026-09-12';
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const FULLMON = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+const STATUS = {
+  draft:          {label:'Draft',          bg:'#eef0f2', fg:'#4b5563', dot:'#6b7280', panelTitle:'This order is still a draft', panelBody:'It has not been submitted yet, so no writer has picked it up. Submit it when the brief says what you need.', panelBg:'#fffefc', panelBorder:'#e5dfd7'},
+  in_progress:    {label:'In progress',    bg:'#f9e9e2', fg:'#8f3d22', dot:'#b4502f', panelTitle:'Content is being written', panelBody:'Your writer is working on this piece. You will be notified when it is ready for review.', panelBg:'#fffdfb', panelBorder:'#f0d9cd'},
+  pending_review: {label:'Pending review', bg:'#f8eed6', fg:'#7a5200', dot:'#8a5b00', panelTitle:'Ready for your review', panelBody:'The draft is finished and waiting for you.', panelBg:'#fffdf7', panelBorder:'#ecdcb4'},
+  completed:      {label:'Completed',      bg:'#e3efe7', fg:'#1f6144', dot:'#2f6a4a', panelTitle:'This order is complete', panelBody:'The finished piece is available to download.', panelBg:'#fcfdfc', panelBorder:'#d6e6dc'},
+  cancelled:      {label:'Cancelled',      bg:'#efece8', fg:'#6b645d', dot:'#8a8178', panelTitle:'This order was cancelled', panelBody:'No further work will happen on it. Nothing was charged.', panelBg:'#fcfbfa', panelBorder:'#e5dfd7'}
+};
+const PRIORITY = {low:{label:'Low',color:'#9aa0a6'}, medium:{label:'Medium',color:'#b4502f'}, high:{label:'High',color:'#a03a22'}};
+const AV_BG = ['#1f4d3a','#4a2d52','#17555c','#8f3d22','#3c3f6b'];
+
+function d(s){ const p = String(s).split('-'); return Date.UTC(+p[0], +p[1]-1, +p[2]); }
+function short(s){ if(!s) return '—'; const p = String(s).split('-'); return MON[+p[1]-1] + ' ' + (+p[2]); }
+function long(s){ if(!s) return '—'; const p = String(s).split('-'); return MON[+p[1]-1] + ' ' + (+p[2]) + ', ' + p[0]; }
+function addDays(s, n){ const t = new Date(d(s) + n*86400000); return t.toISOString().slice(0,10); }
+function initials(name){ const p = name.trim().split(/\s+/); return (p[0][0] + (p[1] ? p[1][0] : '')).toUpperCase(); }
+
+const ORDERS = [
+  {id:'1024', n:1024, title:'SaaS Growth Guide', status:'in_progress', priority:'high', format:'Blog post', words:2200, deadline:'2026-09-25', created:'2026-09-02',
+   assignees:['Mara Okafor'], keywords:['saas growth','content strategy','demand generation'],
+   brief:'A practical guide for early-stage SaaS teams on the two or three growth levers that actually move revenue in the first year. We want the piece to argue against the "do everything" playbook. Use our own onboarding data where it helps.', deliverable:null},
+  {id:'1023', n:1023, title:'Q3 newsletter', status:'pending_review', priority:'medium', format:'Newsletter', words:900, deadline:'2026-09-18', created:'2026-08-30',
+   assignees:['Tomas Lindqvist'], keywords:['newsletter','product update'],
+   brief:'Quarterly customer newsletter. Lead with the integrations launch, then the two reporting improvements, then one short customer note. Keep it readable in three minutes.', deliverable:null},
+  {id:'1022', n:1022, title:'Onboarding email sequence rewrite', status:'draft', priority:'medium', format:'Newsletter', words:1200, deadline:null, created:'2026-09-08',
+   assignees:[], keywords:['onboarding','email','activation'],
+   brief:'Rewrite of the five-email onboarding sequence. Current version reads like a feature list; we want each email to do one job and earn the next open.', deliverable:null},
+  {id:'1021', n:1021, title:'Partner programme one-pager', status:'cancelled', priority:'low', format:'Case study', words:800, deadline:'2026-09-05', created:'2026-08-18',
+   assignees:[], keywords:['partners','channel'],
+   brief:'One-pager for the partner programme launch. Cancelled after the programme was pushed to next year.', deliverable:null},
+  {id:'1020', n:1020, title:'Integrations launch announcement', status:'completed', priority:'medium', format:'Blog post', words:1100, deadline:'2026-08-28', created:'2026-08-10',
+   assignees:['Mara Okafor'], keywords:['integrations','launch','api'],
+   brief:'Launch post for the six new integrations. Explain what each one unlocks in one sentence, then the wider point about working inside the tools people already use.',
+   deliverable:{filename:'Integrations_launch_announcement.docx', uploadedAt:'2026-08-26'}},
+  {id:'1019', n:1019, title:'Why mid-market teams outgrow spreadsheets', status:'completed', priority:'medium', format:'Whitepaper', words:3400, deadline:'2026-08-20', created:'2026-07-28',
+   assignees:['Priya Raman'], keywords:['mid-market','operations','spreadsheets'],
+   brief:'Whitepaper aimed at operations leads at 100–500 person companies. The argument is about coordination cost, not features.',
+   deliverable:{filename:'Mid_market_spreadsheets_whitepaper_v3.docx', uploadedAt:'2026-08-14'}},
+  {id:'1018', n:1018, title:'Customer success story: Northwind Labs', status:'completed', priority:'high', format:'Case study', words:1600, deadline:'2026-08-01', created:'2026-07-06',
+   assignees:['Tomas Lindqvist'], keywords:['case study','customer story'],
+   brief:'Case study with Northwind Labs. Interview notes are attached to the shared drive. Lead with the eleven-day migration, not the logo.',
+   deliverable:{filename:'Customer_Success_Story_Final.docx', uploadedAt:'2026-07-30'}},
+  {id:'1017', n:1017, title:'Security & compliance overview', status:'completed', priority:'low', format:'Whitepaper', words:4200, deadline:'2026-07-15', created:'2026-06-20',
+   assignees:['Priya Raman'], keywords:['security','compliance','soc2'],
+   brief:'Plain-language overview of our security posture for buyers who are not security specialists. Needs legal review before publishing.',
+   deliverable:{filename:'Security_and_compliance_overview.docx', uploadedAt:'2026-07-09'}},
+  {id:'1016', n:1016, title:'Pricing page rewrite', status:'completed', priority:'medium', format:'Landing page', words:700, deadline:'2026-06-22', created:'2026-06-01',
+   assignees:['Mara Okafor','Priya Raman'], keywords:['pricing','conversion'],
+   brief:'Rewrite of the pricing page copy. Three plans, no jargon, and an honest answer to "which one am I?" above the table.',
+   deliverable:{filename:'Pricing_page_copy.docx', uploadedAt:'2026-06-18'}},
+  {id:'1015', n:1015, title:'Spring product roundup', status:'completed', priority:'low', format:'Newsletter', words:850, deadline:'2026-05-25', created:'2026-05-04',
+   assignees:['Tomas Lindqvist'], keywords:['newsletter','roundup'],
+   brief:'Spring roundup of everything shipped since February. Short, scannable, one line per item.',
+   deliverable:{filename:'Spring_product_roundup.docx', uploadedAt:'2026-05-21'}},
+  {id:'1014', n:1014, title:'How we cut onboarding time in half', status:'completed', priority:'medium', format:'Blog post', words:1400, deadline:'2026-05-02', created:'2026-04-09',
+   assignees:['Mara Okafor'], keywords:['onboarding','activation','product'],
+   brief:'Behind-the-scenes post on the onboarding rebuild. Include the before-and-after numbers and what we got wrong first.',
+   deliverable:{filename:'Onboarding_time_in_half.docx', uploadedAt:'2026-04-28'}},
+  {id:'1013', n:1013, title:'Data migration playbook', status:'completed', priority:'high', format:'Whitepaper', words:5200, deadline:'2026-04-10', created:'2026-03-16',
+   assignees:['Priya Raman','Jonah Weiss'], keywords:['migration','implementation','data'],
+   brief:'Step-by-step playbook for teams migrating off a legacy system. Written for the person who has to do the work, not the person who approves it.',
+   deliverable:{filename:'Data_migration_playbook.docx', uploadedAt:'2026-04-07'}},
+  {id:'1012', n:1012, title:'Field guide to content ops', status:'completed', priority:'medium', format:'Blog post', words:1800, deadline:'2026-03-24', created:'2026-03-02',
+   assignees:['Mara Okafor'], keywords:['content ops','process'],
+   brief:'Opening piece for the content ops series. Define the discipline, then show the smallest version of it that works for a team of three.',
+   deliverable:{filename:'Field_guide_content_ops.docx', uploadedAt:'2026-03-19'}}
+];
+
+const EDGE = [
+  {id:'edge-max-title', n:1031, edge:true, status:'in_progress', priority:'medium', format:'Whitepaper', words:6000, deadline:'2026-10-02', created:'2026-09-04', assignees:['Priya Raman'], keywords:['operations','workflow'], deliverable:null,
+   title:'How mid-market operations teams replace seven overlapping spreadsheets with a single content workflow, without a migration'.slice(0,120),
+   brief:'Tests a title at the 120-character maximum in every list and header.'},
+  {id:'edge-min-title', n:1032, edge:true, title:'SEO', status:'draft', priority:'low', format:'Blog post', words:100, deadline:null, created:'2026-09-09', assignees:[], keywords:[], deliverable:null,
+   brief:'Tests the three-character minimum title and the hundred-word minimum together.'},
+  {id:'edge-overdue', n:1033, edge:true, title:'Enterprise buyer’s guide', status:'in_progress', priority:'high', format:'Whitepaper', words:4800, deadline:'2026-08-20', created:'2026-07-14', assignees:['Tomas Lindqvist'], keywords:['enterprise','buyer guide','procurement'], deliverable:null,
+   brief:'Deadline has passed and the work is still in flight. None of the thirteen sample orders is overdue, so this is the record that tests the treatment.'},
+  {id:'edge-many-assignees', n:1034, edge:true, title:'Annual report, long form', status:'in_progress', priority:'medium', format:'Whitepaper', words:9000, deadline:'2026-10-30', created:'2026-08-28',
+   assignees:['Mara Okafor','Priya Raman','Tomas Lindqvist','Jonah Weiss'], keywords:['annual report','long form'], deliverable:null,
+   brief:'Four writers split the sections. Tests the avatar overflow rule.'},
+  {id:'edge-max-keywords', n:1035, edge:true, title:'Content strategy for regulated industries', status:'pending_review', priority:'medium', format:'Case study', words:2400, deadline:'2026-09-30', created:'2026-08-22', assignees:['Priya Raman'], deliverable:null,
+   keywords:['content strategy','regulated industries','compliance','financial services','healthcare','legal review','governance','brand voice','risk','approval workflow'],
+   brief:'Ten keywords, the maximum, so the chip row has to wrap.'},
+  {id:'edge-long-filename', n:1036, edge:true, title:'Quarterly business review template', status:'completed', priority:'low', format:'Case study', words:1200, deadline:'2026-09-01', created:'2026-08-02', assignees:['Mara Okafor'], keywords:['qbr','template'],
+   deliverable:{filename:'Quarterly_Business_Review_Template_Final_Approved_Legal_Reviewed_2026_09.docx', uploadedAt:'2026-08-29'},
+   brief:'The deliverable filename is long enough to need truncating without losing the extension.'},
+  {id:'edge-long-brief', n:1037, edge:true, title:'Platform migration deep dive', status:'in_progress', priority:'high', format:'Whitepaper', words:10000, deadline:'2026-11-14', created:'2026-09-01', assignees:['Priya Raman','Jonah Weiss'], keywords:['migration','platform','architecture'], deliverable:null,
+   brief:'This brief exists to dominate the detail page.\n\nWe are moving three product lines off a platform that has been in place for nine years, and the piece has to be useful to two audiences at once: the operations lead who owns the timeline, and the engineer who owns the data. Start with why teams delay migrations — the cost is visible and the benefit is not — then work through the four phases we use, with the honest failure mode of each.\n\nPhase one is inventory. Most teams underestimate it by a factor of three, because the systems nobody claims are the systems everybody depends on. Phase two is mapping, where the argument about field semantics happens; we want the piece to say plainly that this argument is the work, not a delay to the work. Phase three is the cutover rehearsal, which is where our own migration went wrong in 2024 and is worth describing in detail. Phase four is decommissioning, which nobody budgets for.\n\nTone: plain, specific, no vendor triumphalism. Include the eleven-day Northwind figure if it fits, but do not build the piece around it. Assume the reader has been burned before.'}
+];
+
+const NOTIFS = [
+  {id:'n1', kind:'order_update',   title:"Your order 'SaaS Growth Guide' is now in progress", orderId:'1024', createdAt:'2026-09-10', read:false},
+  {id:'n2', kind:'order_update',   title:"Order 'Q3 newsletter' is ready for your review", orderId:'1023', createdAt:'2026-09-09', read:false},
+  {id:'n3', kind:'order_complete', title:"Order 'Integrations launch announcement' marked as complete", orderId:'1020', createdAt:'2026-08-26', read:true},
+  {id:'n4', kind:'order_complete', title:"Order 'Mid-market spreadsheets whitepaper' marked as complete", orderId:'1019', createdAt:'2026-08-14', read:true},
+  {id:'n5', kind:'system',         title:'Welcome to Article Orders', orderId:null, createdAt:'2026-03-01', read:true}
+];
+
+class Component extends DCLogic {
+  state = {
+    view:'dashboard', orderId:'1024', settingsTab:'profile',
+    statuses:[], sort:'newest', query:'', page:1,
+    dataState:'ready', demoBanner:true, edgeCases:false, orderMissing:false,
+    allRead:false, avatarOpen:false, searchOpen:false, searchQuery:'', trayOpen:false,
+    hoverBar:-1, submitting:false, prefilled:false, errors:{},
+    form:{title:'', brief:'', keywords:'', format:'', words:'', deadline:''},
+    profileForm:{fullName:'Elena Márquez', company:'Harborline Analytics', avatarUrl:''},
+    defaultsForm:{words:'1500', format:'Blog post', tone:'Practical, plain-spoken'},
+    pwForm:{a:'', b:''}, pwTouched:false,
+    savedMessage:'', saving:false
+  };
+
+  componentDidMount(){
+    this._key = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === '1'){ e.preventDefault(); this.setState({searchOpen:true}); }
+      if (e.key === 'Escape') this.setState({searchOpen:false, avatarOpen:false});
+    };
+    window.addEventListener('keydown', this._key);
+  }
+  componentWillUnmount(){ window.removeEventListener('keydown', this._key); }
+
+  go(view){ return () => this.setState({view, avatarOpen:false, searchOpen:false}); }
+  allOrders(){ return this.state.edgeCases ? ORDERS.concat(EDGE) : ORDERS; }
+
+  isOverdue(o){ return o.deadline && d(o.deadline) < d(TODAY) && o.status !== 'completed' && o.status !== 'cancelled'; }
+
+  avatarsFor(o, max){
+    const names = o.assignees || [];
+    const cut = names.slice(0, max);
+    return {
+      avatars: cut.map((nm) => ({name:nm, initials:initials(nm), bg:AV_BG[nm.charCodeAt(0) % AV_BG.length]})),
+      hasOverflow: names.length > max,
+      overflowLabel: '+' + (names.length - max),
+      unassigned: names.length === 0
+    };
+  }
+
+  vm(o){
+    const s = STATUS[o.status];
+    const over = this.isOverdue(o);
+    const av = this.avatarsFor(o, 3);
+    return Object.assign({}, o, av, {
+      statusLabel:s.label, badgeBg:s.bg, badgeFg:s.fg,
+      deadlineShort: o.deadline ? short(o.deadline) : 'No deadline',
+      deadlineColor: over ? '#a03a22' : (o.deadline ? '#57534e' : '#a8a09a'),
+      metaLine: o.format + ' · ' + o.words.toLocaleString() + ' words · ' + PRIORITY[o.priority].label + ' priority',
+      overdue: over,
+      open: () => this.setState({view:'order', orderId:o.id, searchOpen:false, orderMissing:false})
+    });
+  }
+
+  eventsFor(o){
+    const ev = [];
+    const first = o.status === 'draft' ? 'Order created' : 'Order submitted';
+    ev.push({label:first, date:o.created});
+    if (o.status === 'cancelled'){
+      ev.push({label:'Order cancelled', date:addDays(o.created, 3)});
+    } else if (o.status !== 'draft'){
+      ev.push({label:'Status changed to in progress', date:addDays(o.created, 2)});
+      if (o.status === 'pending_review' || o.status === 'completed')
+        ev.push({label:'Status changed to pending review', date:addDays(o.created, 9)});
+      if (o.status === 'completed'){
+        ev.push({label:'Delivered ' + o.deliverable.filename, date:o.deliverable.uploadedAt});
+        ev.push({label:'Status changed to completed', date:o.deliverable.uploadedAt});
+      }
+    }
+    ev.reverse();
+    return ev.map((e, i) => ({
+      label:e.label, date:long(e.date),
+      dot: i === 0 ? STATUS[o.status].dot : '#d6cdc2',
+      ring: i === 0 ? (STATUS[o.status].bg) : 'transparent',
+      lineColor: i === ev.length - 1 ? 'transparent' : '#f0ebe4'
+    }));
+  }
+
+  renderVals(){
+    const st = this.state;
+    const view = st.view;
+    const loading = st.dataState === 'loading';
+    const error = st.dataState === 'error';
+    const zero = st.dataState === 'zero';
+    const base = zero ? [] : this.allOrders();
+
+    // ---- list pipeline
+    let list = base.slice();
+    const q = st.query.trim().toLowerCase();
+    if (q) list = list.filter((o) => (o.title + ' ' + o.brief).toLowerCase().indexOf(q) >= 0);
+    if (st.statuses.length) list = list.filter((o) => st.statuses.indexOf(o.status) >= 0);
+    const cmp = {
+      newest: (a,b) => d(b.created) - d(a.created),
+      oldest: (a,b) => d(a.created) - d(b.created),
+      title:  (a,b) => a.title.localeCompare(b.title),
+      deadline_soon: (a,b) => (a.deadline?d(a.deadline):Infinity) - (b.deadline?d(b.deadline):Infinity),
+      deadline_late: (a,b) => (b.deadline?d(b.deadline):-Infinity) - (a.deadline?d(a.deadline):-Infinity)
+    }[st.sort];
+    list = list.sort((a,b) => {
+      if (st.sort.indexOf('deadline') === 0){
+        if (!a.deadline && !b.deadline) return 0;
+        if (!a.deadline) return 1;
+        if (!b.deadline) return -1;
+      }
+      return cmp(a,b);
+    });
+    const per = 10;
+    const pageCount = Math.max(1, Math.ceil(list.length / per));
+    const page = Math.min(st.page, pageCount);
+    const slice = list.slice((page-1)*per, page*per);
+    const filtersActive = st.statuses.length > 0 || q.length > 0;
+
+    // ---- stats
+    const counts = {};
+    Object.keys(STATUS).forEach((k) => { counts[k] = base.filter((o) => o.status === k).length; });
+    const overdue = base.filter((o) => this.isOverdue(o)).length;
+    const upcoming = base.filter((o) => o.deadline && o.status !== 'completed' && o.status !== 'cancelled')
+                         .map((o) => o.deadline).sort();
+    const nextDl = upcoming.length ? short(upcoming[0]) : 'None set';
+    const stats = [
+      {label:'Total orders', value:base.length, color:'#1c1917'},
+      {label:'In progress', value:counts.in_progress, color:'#8f3d22'},
+      {label:'Pending review', value:counts.pending_review, color:'#7a5200'},
+      {label:'Completed', value:counts.completed, color:'#1f6144'},
+      {label:'Overdue', value:overdue, color: overdue ? '#a03a22' : '#a8a09a'},
+      {label:'Next deadline', value:nextDl, color:'#1c1917'}
+    ];
+
+    // ---- chart
+    const series = [
+      {label:'Mar', full:'March 2026', count: zero?0:1},
+      {label:'Apr', full:'April 2026', count: zero?0:2},
+      {label:'May', full:'May 2026', count: zero?0:1},
+      {label:'Jun', full:'June 2026', count: zero?0:1},
+      {label:'Jul', full:'July 2026', count: zero?0:2},
+      {label:'Aug', full:'August 2026', count: zero?0:2},
+      {label:'Sep', full:'September 2026', count:0}
+    ];
+    const maxCount = Math.max.apply(null, series.map((s) => s.count));
+    const axisMax = Math.max(3, maxCount + 1);
+    const yTicks = []; for (let i = axisMax; i >= 0; i--) yTicks.push(i);
+    const chart = series.map((s, i) => ({
+      label:s.label, fullMonth:s.full, count:s.count,
+      h: (s.count / axisMax * 100).toFixed(1) + '%',
+      fill: s.count === 0 ? '#ece6de' : (st.hoverBar === i ? '#8f3d22' : '#b4502f'),
+      labelColor: s.count === 0 ? '#c2bab1' : '#8a8178',
+      hovered: st.hoverBar === i,
+      tip: s.count === 0 ? 'No articles completed' : (s.count === 1 ? '1 article completed' : s.count + ' articles completed'),
+      enter: () => this.setState({hoverBar:i})
+    }));
+    const total7 = series.reduce((a,s) => a + s.count, 0);
+
+    // ---- current order
+    const found = this.allOrders().filter((o) => o.id === st.orderId)[0] || ORDERS.filter((o) => o.id === st.orderId)[0];
+    let orderVm = null;
+    if (found && !st.orderMissing){
+      const s = STATUS[found.status];
+      const av = this.avatarsFor(found, 3);
+      const fn = found.deliverable ? found.deliverable.filename : '';
+      const dot = fn.lastIndexOf('.');
+      orderVm = Object.assign({}, this.vm(found), av, {
+        panelTitle:s.panelTitle, panelBody:s.panelBody, panelBg:s.panelBg, panelBorder:s.panelBorder,
+        isDraft: found.status === 'draft',
+        hasDeliverable: !!found.deliverable,
+        hasKeywords: (found.keywords || []).length > 0,
+        fileStem: dot > 0 ? fn.slice(0, dot) : fn,
+        fileSuffix: dot > 0 ? fn.slice(dot) : '',
+        fileExt: dot > 0 ? fn.slice(dot+1).toUpperCase() : '',
+        uploadedAt: found.deliverable ? long(found.deliverable.uploadedAt) : '',
+        events: this.eventsFor(found),
+        details: [
+          {label:'Format', value:found.format, color:'#1c1917', font:"'IBM Plex Sans',sans-serif"},
+          {label:'Word count', value:found.words.toLocaleString(), color:'#1c1917', font:"'IBM Plex Mono',monospace"},
+          {label:'Deadline', value: found.deadline ? long(found.deadline) : 'No deadline', color: this.isOverdue(found) ? '#a03a22' : (found.deadline ? '#1c1917' : '#a8a09a'), font:"'IBM Plex Mono',monospace"},
+          {label:'Priority', value:PRIORITY[found.priority].label, color:PRIORITY[found.priority].color, font:"'IBM Plex Sans',sans-serif"},
+          {label:'Ordered', value:long(found.created), color:'#1c1917', font:"'IBM Plex Mono',monospace"}
+        ]
+      });
+    }
+
+    // ---- notifications
+    const notifs = NOTIFS.map((n) => {
+      const unread = !n.read && !st.allRead;
+      const glyph = n.kind === 'order_complete' ? '✓' : (n.kind === 'system' ? '★' : '↻');
+      return {
+        title:n.title, date:long(n.createdAt), unread,
+        glyph,
+        iconBg: n.kind === 'order_complete' ? '#e3efe7' : (n.kind === 'system' ? '#f4efe9' : '#f9e9e2'),
+        iconFg: n.kind === 'order_complete' ? '#1f6144' : (n.kind === 'system' ? '#57534e' : '#8f3d22'),
+        bg: unread ? '#fffdfb' : '#fffefc',
+        weight: unread ? '600' : '500',
+        linked: !!n.orderId,
+        cursor: n.orderId ? 'pointer' : 'default',
+        open: n.orderId ? () => this.setState({view:'order', orderId:n.orderId, orderMissing:false}) : () => {}
+      };
+    });
+    const unreadCount = notifs.filter((n) => n.unread).length;
+
+    // ---- search overlay
+    const sq = st.searchQuery.trim().toLowerCase();
+    const sres = (sq ? this.allOrders().filter((o) => (o.title + ' ' + o.brief).toLowerCase().indexOf(sq) >= 0) : this.allOrders().slice(0,5)).slice(0,8).map((o) => this.vm(o));
+
+    // ---- new-order form
+    const f = st.form;
+    const chips = f.keywords.split(',').map((k) => k.trim().toLowerCase()).filter(Boolean).filter((k,i,a) => a.indexOf(k) === i);
+    const e = st.errors;
+    const tl = f.title.length, bl = f.brief.length;
+
+    const notifDefs = [
+      {key:'status', label:'Status changes', help:'When an order moves to a new status'},
+      {key:'delivered', label:'Delivered articles', help:'When a finished piece is uploaded'},
+      {key:'weekly', label:'Weekly summary', help:'A Monday digest of everything in flight'}
+    ];
+    const notifOn = st.notifOn || {status:true, delivered:true, weekly:false};
+
+    const settingsTabs = [
+      {key:'profile', label:'Profile'}, {key:'notifications', label:'Notifications'},
+      {key:'defaults', label:'Order defaults'}, {key:'password', label:'Password'}
+    ].map((t) => ({
+      label:t.label,
+      bg: st.settingsTab === t.key ? '#f2e5df' : 'transparent',
+      fg: st.settingsTab === t.key ? '#8f3d22' : '#57534e',
+      go: () => this.setState({settingsTab:t.key, savedMessage:''})
+    }));
+
+    const pwShort = st.pwTouched && st.pwForm.a.length > 0 && st.pwForm.a.length < 8;
+    const pwMismatch = st.pwTouched && st.pwForm.b.length > 0 && st.pwForm.a !== st.pwForm.b;
+
+    return {
+      profile: {fullName: st.profileForm.fullName, company: st.profileForm.company, email:'elena@harborline.io', initials: initials(st.profileForm.fullName)},
+      profileForm: st.profileForm, defaultsForm: st.defaultsForm, pwForm: st.pwForm, trueVal: true, noop: () => {},
+      stop: (ev) => ev.stopPropagation(),
+
+      isDashboard: view === 'dashboard', isTasks: view === 'tasks', isOrder: view === 'order',
+      isInbox: view === 'inbox', isNew: view === 'new', isSettings: view === 'settings', isFoundations: view === 'foundations',
+      goDashboard: this.go('dashboard'), goTasks: this.go('tasks'), goInbox: this.go('inbox'),
+      goNew: this.go('new'), goSettings: this.go('settings'), goFoundations: this.go('foundations'),
+      navDashBg: view === 'dashboard' ? '#f2e5df' : 'transparent', navDashFg: view === 'dashboard' ? '#8f3d22' : '#57534e',
+      navTasksBg: view === 'tasks' ? '#f2e5df' : 'transparent', navTasksFg: view === 'tasks' ? '#8f3d22' : '#57534e',
+      navInboxBg: view === 'inbox' ? '#f2e5df' : 'transparent', navInboxFg: view === 'inbox' ? '#8f3d22' : '#57534e',
+
+      avatarOpen: st.avatarOpen, toggleAvatar: () => this.setState({avatarOpen: !st.avatarOpen}),
+      demoBanner: st.demoBanner, nextDeadline: nextDl,
+      hasUnread: unreadCount > 0, unreadCount,
+
+      isLoading: loading, isError: error, retry: () => this.setState({dataState:'ready'}),
+      skeletons: [0,0,0,0,0,0], skeletonRows: [0,0,0,0,0,0],
+
+      greeting: 'Hello, ' + st.profileForm.fullName.split(' ')[0],
+      dashSubtitle: zero ? 'Nothing in production yet.' : (counts.pending_review ? counts.pending_review + ' piece waiting for your review · ' + counts.in_progress + ' being written' : counts.in_progress + ' being written'),
+      dashReady: !loading && !error,
+      hasOrders: base.length > 0, noOrders: base.length === 0,
+      recent: base.slice(0,5).map((o) => this.vm(o)),
+      chart, yTicks, chartEmpty: total7 === 0, chartHasData: total7 > 0,
+      chartSummary: total7 + ' articles delivered since March · ' + (maxCount || 0) + ' in the busiest month',
+      leaveBar: () => this.setState({hoverBar:-1}),
+      stats,
+
+      tasksSubtitle: zero ? 'No orders yet' : base.length + ' orders · ' + counts.in_progress + ' in progress · ' + counts.completed + ' completed',
+      query: st.query, hasQuery: q.length > 0,
+      setQuery: (ev) => this.setState({query: ev.target.value, page:1}),
+      clearQuery: () => this.setState({query:'', page:1}),
+      sort: st.sort, setSort: (ev) => this.setState({sort: ev.target.value, page:1}),
+      statusFilters: Object.keys(STATUS).map((k) => {
+        const on = st.statuses.indexOf(k) >= 0;
+        return {
+          label: STATUS[k].label,
+          bg: on ? STATUS[k].bg : '#fffefc', fg: on ? STATUS[k].fg : '#57534e',
+          border: on ? STATUS[k].fg : '#e5dfd7',
+          toggle: () => this.setState({page:1, statuses: on ? st.statuses.filter((x) => x !== k) : st.statuses.concat([k])})
+        };
+      }),
+      anyFilterActive: filtersActive,
+      activeChips: st.statuses.map((k) => ({label: STATUS[k].label, remove: () => this.setState({statuses: st.statuses.filter((x) => x !== k), page:1})}))
+        .concat(q ? [{label:'“' + st.query + '”', remove: () => this.setState({query:'', page:1})}] : []),
+      clearFilters: () => this.setState({statuses:[], query:'', page:1}),
+      totalOrders: base.length,
+
+      showRows: !loading && !error && slice.length > 0,
+      filteredToNothing: !loading && !error && list.length === 0 && base.length > 0,
+      noOrdersAtAll: !loading && !error && base.length === 0,
+      rows: slice.map((o) => this.vm(o)),
+      showingLabel: 'Showing ' + ((page-1)*per + 1) + '–' + Math.min(page*per, list.length) + ' of ' + list.length,
+      pages: Array.apply(null, {length:pageCount}).map((x,i) => ({
+        n: i+1,
+        bg: page === i+1 ? '#1c1917' : '#fffefc', fg: page === i+1 ? '#fffefc' : '#57534e',
+        border: page === i+1 ? '#1c1917' : '#e5dfd7',
+        go: () => this.setState({page: i+1})
+      })),
+      prevPage: () => this.setState({page: Math.max(1, page-1)}),
+      nextPage: () => this.setState({page: Math.min(pageCount, page+1)}),
+      onFirstPage: page === 1, onLastPage: page === pageCount,
+      prevColor: page === 1 ? '#bdb5ac' : '#1c1917', nextColor: page === pageCount ? '#bdb5ac' : '#1c1917',
+      edgeCases: st.edgeCases, toggleEdge: () => this.setState({edgeCases: !st.edgeCases, page:1}),
+
+      order: orderVm,
+      orderLoading: loading, orderNotFound: !loading && (st.orderMissing || !orderVm),
+      orderReady: !loading && !st.orderMissing && !!orderVm,
+
+      notifications: notifs, inboxReady: !loading, inboxEmpty: false,
+      inboxSubtitle: unreadCount ? unreadCount + ' unread of ' + notifs.length : 'All ' + notifs.length + ' read',
+      markAllRead: () => this.setState({allRead:true}),
+
+      searchOpen: st.searchOpen, searchQuery: st.searchQuery,
+      openSearch: () => this.setState({searchOpen:true}),
+      closeSearch: () => this.setState({searchOpen:false}),
+      setSearchQuery: (ev) => this.setState({searchQuery: ev.target.value}),
+      searchResults: sres, searchHasResults: sres.length > 0, searchEmpty: sres.length === 0,
+
+      form: f, chips, hasChips: chips.length > 0,
+      setTitle: (ev) => this.setState({form: Object.assign({}, f, {title: ev.target.value})}),
+      setBrief: (ev) => this.setState({form: Object.assign({}, f, {brief: ev.target.value})}),
+      setKeywords: (ev) => this.setState({form: Object.assign({}, f, {keywords: ev.target.value})}),
+      setFormat: (ev) => this.setState({form: Object.assign({}, f, {format: ev.target.value})}),
+      setWords: (ev) => this.setState({form: Object.assign({}, f, {words: ev.target.value})}),
+      setDeadline: (ev) => this.setState({form: Object.assign({}, f, {deadline: ev.target.value})}),
+      titleCount: tl + ' / 120', briefCount: bl.toLocaleString() + ' / 5,000',
+      titleCountColor: tl > 120 ? '#a03a22' : (tl > 108 ? '#8a5b00' : '#a8a09a'),
+      briefCountColor: bl > 5000 ? '#a03a22' : (bl > 4500 ? '#8a5b00' : '#a8a09a'),
+      kwCount: chips.length + ' / 10', kwCountColor: chips.length > 10 ? '#a03a22' : '#a8a09a',
+      titleBorder: e.title ? '#c2543a' : '#e5dfd7', briefBorder: e.brief ? '#c2543a' : '#e5dfd7',
+      kwBorder: e.keywords ? '#c2543a' : '#e5dfd7', formatBorder: e.format ? '#c2543a' : '#e5dfd7',
+      wordsBorder: e.words ? '#c2543a' : '#e5dfd7',
+      errTitle: !!e.title, errTitleMsg: e.title, errBrief: !!e.brief, errBriefMsg: e.brief,
+      errKw: !!e.keywords, errFormat: !!e.format, errWords: !!e.words, errWordsMsg: e.words,
+      wordsHintOk: !e.words,
+      formBanner: Object.keys(e).length > 0,
+      prefilled: st.prefilled, togglePrefill: () => this.togglePrefill(),
+      submitting: st.submitting, submitLabel: st.submitting ? 'Submitting…' : 'Submit order',
+      submitBg: st.submitting ? '#8f3d22' : '#b4502f', submitCursor: st.submitting ? 'wait' : 'pointer',
+      submitOrder: () => this.submitOrder(),
+      fillSample: () => this.fillSample(), showErrors: () => this.showErrors(),
+
+      settingsTabs,
+      tabProfile: st.settingsTab === 'profile', tabNotif: st.settingsTab === 'notifications',
+      tabDefaults: st.settingsTab === 'defaults', tabPassword: st.settingsTab === 'password',
+      savedToast: !!st.savedMessage, savedMessage: st.savedMessage,
+      saving: st.saving, saveLabel: st.saving ? 'Saving…' : 'Save changes', saveBg: st.saving ? '#8f3d22' : '#b4502f',
+      setPName: (ev) => this.setState({profileForm: Object.assign({}, st.profileForm, {fullName: ev.target.value})}),
+      setPCompany: (ev) => this.setState({profileForm: Object.assign({}, st.profileForm, {company: ev.target.value})}),
+      setPAvatar: (ev) => this.setState({profileForm: Object.assign({}, st.profileForm, {avatarUrl: ev.target.value})}),
+      saveProfile: () => { this.setState({saving:true, savedMessage:''}); setTimeout(() => this.setState({saving:false, savedMessage:'Profile saved'}), 900); },
+      setDWords: (ev) => this.setState({defaultsForm: Object.assign({}, st.defaultsForm, {words: ev.target.value})}),
+      setDFormat: (ev) => this.setState({defaultsForm: Object.assign({}, st.defaultsForm, {format: ev.target.value})}),
+      setDTone: (ev) => this.setState({defaultsForm: Object.assign({}, st.defaultsForm, {tone: ev.target.value})}),
+      saveDefaults: () => this.setState({savedMessage:'Order defaults saved'}),
+      notifToggles: notifDefs.map((n) => ({
+        label:n.label, help:n.help,
+        track: notifOn[n.key] ? '#b4502f' : '#ddd5ca',
+        knobLeft: notifOn[n.key] ? '21px' : '3px',
+        toggle: () => this.setState({notifOn: Object.assign({}, notifOn, {[n.key]: !notifOn[n.key]})})
+      })),
+      setPwA: (ev) => this.setState({pwForm: Object.assign({}, st.pwForm, {a: ev.target.value}), pwTouched:true}),
+      setPwB: (ev) => this.setState({pwForm: Object.assign({}, st.pwForm, {b: ev.target.value}), pwTouched:true}),
+      pwShort, pwMismatch,
+      pwBorderA: pwShort ? '#c2543a' : '#e5dfd7', pwBorderB: pwMismatch ? '#c2543a' : '#e5dfd7',
+      savePassword: () => this.setState({pwTouched:true, savedMessage: (this.state.pwForm.a.length >= 8 && this.state.pwForm.a === this.state.pwForm.b) ? 'Password updated' : ''}),
+
+      allBadges: Object.keys(STATUS).map((k) => ({label:STATUS[k].label, bg:STATUS[k].bg, fg:STATUS[k].fg})),
+      allPriorities: Object.keys(PRIORITY).map((k) => PRIORITY[k]),
+      avatarDemo: [
+        Object.assign({caption:'One writer'}, this.avatarsFor({assignees:['Mara Okafor']}, 3)),
+        Object.assign({caption:'Two writers'}, this.avatarsFor({assignees:['Mara Okafor','Priya Raman']}, 3)),
+        Object.assign({caption:'Four writers — overflow'}, this.avatarsFor({assignees:['Mara Okafor','Priya Raman','Tomas Lindqvist','Jonah Weiss']}, 3))
+      ],
+      keywordDemo: [
+        {caption:'Empty', raw:'', chips:[], border:'#e5dfd7'},
+        {caption:'Three keywords', raw:'saas growth, content strategy, demand generation', chips:['saas growth','content strategy','demand generation'], border:'#e5dfd7'},
+        {caption:'Ten — the maximum', raw:'content strategy, regulated industries, compliance, financial services, healthcare, legal review, governance, brand voice, risk, approval workflow', border:'#e5dfd7',
+         chips:['content strategy','regulated industries','compliance','financial services','healthcare','legal review','governance','brand voice','risk','approval workflow']}
+      ],
+      emptyStates: [
+        {id:'O3', title:'No orders match these filters', body:'The user has orders; none match. The way out is the filter.', action:'Clear filters', btnBg:'#fffefc', btnFg:'#b4502f', btnBorder:'#b4502f'},
+        {id:'O4', title:'Nothing ordered yet', body:'First run. Never ordered. The way out is to order something.', action:'Order your first article', btnBg:'#b4502f', btnFg:'#fff', btnBorder:'#b4502f'},
+        {id:'I3', title:'Nothing to read', body:'An empty inbox is normal, not a failure. No action offered.', action:'No action', btnBg:'#f4efe9', btnFg:'#8a8178', btnBorder:'#e5dfd7'}
+      ],
+
+      trayOpen: st.trayOpen, trayClosed: !st.trayOpen,
+      toggleTray: () => this.setState({trayOpen: !st.trayOpen}),
+      dataStates: [
+        {key:'ready', label:'Ready'}, {key:'loading', label:'Loading'},
+        {key:'error', label:'Error'}, {key:'zero', label:'First run'}
+      ].map((x) => ({
+        label:x.label,
+        bg: st.dataState === x.key ? '#d4713f' : 'transparent',
+        fg: st.dataState === x.key ? '#1c1917' : '#f7f4f0',
+        border: st.dataState === x.key ? '#d4713f' : 'rgba(247,244,240,.25)',
+        go: () => this.setState({dataState:x.key, page:1})
+      })),
+      flags: [
+        {label:'Demo-data banner', on: st.demoBanner, toggle: () => this.setState({demoBanner: !st.demoBanner})},
+        {label:'Edge-case records', on: st.edgeCases, toggle: () => this.setState({edgeCases: !st.edgeCases, page:1})},
+        {label:'All notifications read', on: st.allRead, toggle: () => this.setState({allRead: !st.allRead})},
+        {label:'Order not found (R11)', on: st.orderMissing, toggle: () => this.setState({orderMissing: !st.orderMissing, view:'order'})},
+        {label:'Submitting the order form', on: st.submitting, toggle: () => this.setState({submitting: !st.submitting, view:'new'})}
+      ]
+    };
+  }
+
+  togglePrefill(){
+    const on = !this.state.prefilled;
+    const f = this.state.form;
+    this.setState({
+      prefilled: on,
+      form: on ? Object.assign({}, f, {words: this.state.defaultsForm.words, format: this.state.defaultsForm.format})
+               : Object.assign({}, f, {words:'', format:''})
+    });
+  }
+
+  fillSample(){
+    this.setState({
+      errors:{},
+      form:{
+        title:'What procurement actually asks about content workflows',
+        brief:'A piece for marketing leads who have just been told their tooling needs sign-off. Walk through the five questions procurement reliably asks, what a good answer looks like, and which of them are worth pushing back on. Practical, not defensive. Around 1,800 words.',
+        keywords:'procurement, content workflow, enterprise buying',
+        format:'Whitepaper', words:'1800', deadline:'2026-10-09'
+      }
+    });
+  }
+
+  showErrors(){
+    this.setState({
+      form:{title:'ab', brief:'Need a post.', keywords:'a, b, c, d, e, f, g, h, i, j, k', format:'', words:'40', deadline:''},
+      errors:{
+        title:'Give the article a title of at least 3 characters',
+        brief:'Tell us a little more about what you need (10 characters minimum)',
+        keywords:'Use 10 keywords or fewer',
+        format:'Choose a format',
+        words:'Minimum order is 100 words'
+      }
+    });
+  }
+
+  submitOrder(){
+    const f = this.state.form;
+    const errs = {};
+    const chips = f.keywords.split(',').map((k) => k.trim()).filter(Boolean);
+    if (f.title.trim().length < 3) errs.title = 'Give the article a title of at least 3 characters';
+    else if (f.title.length > 120) errs.title = 'Title must be 120 characters or fewer';
+    if (f.brief.trim().length < 10) errs.brief = 'Tell us a little more about what you need (10 characters minimum)';
+    else if (f.brief.length > 5000) errs.brief = 'Brief must be 5000 characters or fewer';
+    if (chips.length > 10) errs.keywords = 'Use 10 keywords or fewer';
+    if (!f.format) errs.format = 'Choose a format';
+    if (!String(f.words).trim()) errs.words = 'Enter a word count';
+    else if (!/^\d+$/.test(String(f.words).trim())) errs.words = 'Word count must be a whole number';
+    else if (+f.words < 100) errs.words = 'Minimum order is 100 words';
+    else if (+f.words > 10000) errs.words = 'For more than 10,000 words, please contact us directly';
+    if (Object.keys(errs).length){ this.setState({errors:errs}); return; }
+    this.setState({errors:{}, submitting:true});
+    setTimeout(() => this.setState({submitting:false, view:'tasks'}), 1100);
+  }
+}
+</script>
+</body>
+</html>
