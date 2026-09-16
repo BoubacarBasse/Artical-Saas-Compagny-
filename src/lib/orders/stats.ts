@@ -53,8 +53,21 @@ export function completionsByMonth(
 }
 
 /** Today in UTC as `YYYY-MM-DD`, for deadline comparisons. */
-function today(now = new Date()): string {
+export function today(now = new Date()): string {
   return now.toISOString().slice(0, 10);
+}
+
+/**
+ * Past its deadline and not yet finished. Shared by the dashboard's overdue
+ * count and any page that flags an individual order, so the two cannot
+ * define "overdue" differently.
+ */
+export function isOverdue(
+  order: Pick<Order, "deadline" | "status">,
+  now = new Date(),
+): boolean {
+  if (order.deadline === null || !isActiveStatus(order.status)) return false;
+  return order.deadline < today(now);
 }
 
 export function computeDashboardStats(

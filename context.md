@@ -44,8 +44,56 @@ Light mode only. Committed to in planning; it also halves the token layer.
 | 0 — design-independent substrate | **Done.** Data layer, auth, routing, RLS, tests. |
 | Design | **Done.** Canvas returned from Claude Design, in `design/canvas/`. |
 | Backend on real Postgres | **Done and verified.** Migration + seed + RLS proven against Postgres 16. |
-| 1 — build the signed-in UI | **Not started. This is the next job.** |
+| 1 — build the signed-in UI | **Done.** Every route below is real, against the canvas. |
 | Deploy to Netlify | Deferred by choice. `netlify.toml` and the plugin are already in place. |
+
+### Phase 1 — what got built
+
+Every placeholder under `src/app/` is gone. Two route groups carry the visual
+split: `src/app/(app)/` (dashboard, orders, orders/new, orders/[id], inbox,
+settings — wrapped in one shared shell layout with the sidebar, header, search,
+and demo-mode banner) and `src/app/(auth)/` (login, signup — a centered card).
+Route groups are invisible to the URL and to `middleware.ts`, so nothing about
+routing or the guard changed.
+
+**Tokens** (`src/app/globals.css`) now hold the real values pulled out of
+`design/canvas/Article Orders.dc.html` — IBM Plex Sans/Mono (loaded via
+`next/font/google` in `src/app/layout.tsx`), the warm cream/terracotta palette,
+and a bg/fg/dot triple per status rather than the one placeholder colour each
+had before. `design/04-tokens.md`'s Value column was never filled in by the
+design tool — the canvas file was the real handoff — so the tokens were read
+out of its inline styles and JS `STATUS`/`PRIORITY`/`AV_BG` maps instead.
+
+**Mutations are Server Actions** under `src/lib/actions/` (`auth.ts`,
+`orders.ts`, `profile.ts`), each a thin wrapper around `src/lib/data` that
+revalidates and redirects. Forms use React 19's `useActionState`. The one
+`"use server"` export that is not a form action is `searchOrdersAction`,
+called directly from the header search modal as an RPC.
+
+**One deliberate divergence from the canvas:** the draft-order panel has no
+"Submit this order" or "Edit the brief" button. The canvas wires both to a
+no-op (`onClick="{{ noop }}"`) — even the design tool's own prototype never
+made them do anything — and there is no `updateOrder` method on `DataProvider`
+for a real one to call. Postgres has no client UPDATE policy on `orders` at
+all (see **The permission model** below), so adding that button would be
+UI promising something the backend cannot do. `draft` means "created, not yet
+picked up by staff" — there is nothing for the client to submit.
+
+**Not implemented:** the chart's per-bar hover tooltip is real (a small client
+component, `CompletionsChart`), but there is no loading-skeleton or
+network-error state on any page — every provider call here resolves
+synchronously against the mock cookie or a local Postgres, so there was
+nothing to show a skeleton *for*. If Supabase mode ever adds real network
+latency worth showing a spinner over, that is where it goes.
+
+Verified end-to-end in mock mode with Playwright, scripted rather than by
+hand: sign up → create an order → filter/sort the orders list → open the
+order detail page → mark notifications read → edit profile → toggle a
+notification preference → set order defaults → change password → sign out →
+sign back in with the *new* password. Zero console or page errors across the
+run. Not yet re-verified against real Supabase (still gated on Docker in this
+environment, see below) — the pages call the same `DataProvider` interface
+either way, but that is a claim until it is actually clicked through.
 
 Every page under `src/app/` is still a Phase 0 placeholder — a bare `<h1>` with
 a `data-testid`. They exist so routing and the middleware guard are real and
@@ -223,11 +271,15 @@ foundations, app shell, My Tasks, dashboard, order detail.
 
 ## What's next
 
-1. **Confirm the Supabase round trip** on a machine with Docker (above).
-2. **Phase 1 — build the signed-in UI** against the canvas. Every page under
-   `src/app/` is a placeholder waiting to be replaced. Start with the shell and
-   the token layer in `src/app/globals.css`, then My Tasks, dashboard, detail.
-3. Deploy to Netlify when there is something worth looking at.
+1. **Confirm the Supabase round trip** on a machine with Docker (above) —
+   now that Phase 1 exists, this also means actually signing in as the demo
+   user and clicking through the real UI, not just checking the database layer.
+2. Deploy to Netlify when there is something worth looking at.
+3. Longer term, if `draft` orders ever need a real client-initiated action
+   (the "Submit this order" button the canvas prototyped but never wired up),
+   that needs an `updateOrder` method on `DataProvider` and a matching Postgres
+   UPDATE policy — a real product decision, not a UI fix. See **Phase 1 — what
+   got built** above.
 
 ---
 
