@@ -28,7 +28,17 @@ A client dashboard for a content-writing business. Clients sign in, order
 articles, and follow them through production. One tenant type: the client.
 
 **There is no admin UI, by design.** Staff advance an order by editing the
-`status` cell in the Supabase table editor and adding a row to `order_events`.
+`status` cell in the Supabase table editor — and that is now the *only* thing
+they touch. Migration `0002` derives the `order_events` row and the client
+notification from the change itself, in the same transaction.
+
+That used to be three manual steps (edit the status, remember to add the
+history row, remember to add the notification), which is a drift generator:
+miss the second and the detail page shows a "Completed" badge above a timeline
+that stops at "submitted"; miss the third and the client is never told. Both
+failures were silent. Uploading a finished file into the `deliverable` column
+records its own `delivered` event the same way.
+
 Everything in the client-facing app is read-only except *create an order* and
 *edit your own profile*. This is the single most important thing to understand
 about the product, because it is why the permission model looks the way it does.
@@ -222,6 +232,36 @@ This is the single most common way the hosted setup appears broken when it is no
 `supabase/seed.sql` is **local only**. It writes a user with a known password and
 inserts rows as the superuser, bypassing RLS. Never run it against a hosted project.
 
+### Hosted Supabase
+
+```bash
+npx supabase login
+npx supabase link --project-ref <ref>   # asks for the database password
+npx supabase db push                    # applies every migration
+```
+
+Then set `DATA_SOURCE=supabase`, `NEXT_PUBLIC_SUPABASE_URL=https://<ref>.supabase.co`
+and the **anon / publishable** key in `.env.local` and run `npm run dev`.
+
+Two traps worth naming, because both look like the app is broken when it is not:
+
+1. `.env.example` ships the *local* URL (`http://127.0.0.1:54321`). Copy it as a
+   starting point and you will be pointed at a Docker container that isn't running.
+2. `npm run dev:supabase` is Unix-only syntax and fails in PowerShell. Putting
+   `DATA_SOURCE=supabase` in `.env.local` works everywhere, which is why that is
+   the documented route rather than the script.
+
+**The demo-mode banner is the tell.** If the amber "Demo data" strip is across the
+top, you are on the mock and nothing you do is touching Postgres, whatever the
+env file says.
+
+`supabase/seed_hosted.sql` puts the same thirteen sample orders on a hosted
+project. Unlike `seed.sql` it creates no users — it looks up an account you
+already signed up for, by email, and refuses with a readable message if that
+account does not exist or already has orders. Set the email on the `\set` line
+at the top, run it in the SQL editor, and the cleanup statement at the bottom
+removes everything it inserted.
+
 ---
 
 ## What is verified, and what is not
@@ -232,8 +272,21 @@ Verified against a real Postgres 16, not just reasoned about:
 - The seed produces exactly what the mock produces — 13 orders, 9 completed,
   1 each in progress / pending review / draft / cancelled, 5 notifications with
   2 unread, 53 events.
-- Both triggers fire: a new auth user gets a profile; a new order gets its
+- Both 0001 triggers fire: a new auth user gets a profile; a new order gets its
   `submitted` event.
+- **The 0002 staff-workflow triggers do what they claim.** Walking an order
+  draft → in progress → pending review → completed writes four history rows with
+  the mock's exact wording and three notifications with the mock's exact titles;
+  filling `deliverable` adds one `delivered` event; re-editing an already-set
+  `deliverable` adds no second one; rewriting a status with the value it already
+  has adds nothing at all. A cancelled order reads "Order cancelled".
+- The new triggers open no hole: as `authenticated`, forging a notification,
+  writing your own history and advancing your own order are all still
+  `permission denied`. The history is written *for* the client, never *by* them.
+- `seed_hosted.sql` produces the same 13 / 9 / 53 / 5-with-2-unread shape as the
+  mock, takes its order numbers from the live sequence rather than hardcoding
+  them, and refuses with a readable message both for an unknown email and for an
+  account that already has orders.
 - A new order inserted as `authenticated` comes out `draft` with a sequence
   number, regardless of what the client asked for.
 - **Every RLS claim above was tested by impersonating users at the SQL level.**
@@ -243,12 +296,26 @@ Verified against a real Postgres 16, not just reasoned about:
   profile email. A signed-out caller sees nothing.
 - 83 unit tests pass; typecheck clean.
 
-**Not yet verified:** the app talking to Supabase over HTTP. The sandbox this was
-built in cannot pull the Supabase Docker images, so PostgREST and GoTrue never
-ran. The database layer beneath them is proven; the round trip is not. This is
-roughly a two-minute check on a machine with working Docker — `npm run db:start`,
-`npm run dev:supabase`, sign in as the demo user, confirm the orders appear. Do
+**A hosted project now has the schema.** `supabase db push` applied `0001` to a
+real hosted project cleanly, storage policy included.
+
+**Still not verified:** the app talking to Supabase over HTTP. Every run so far
+has been in mock mode — the first attempt *looked* like a successful Supabase
+sign-in, but the demo-mode banner was on screen and the dashboard showed the
+thirteen fixture orders, which is the mock provider doing exactly what it is
+supposed to do. Sign-up succeeding and a wrong password being rejected prove the
+mock's auth, not Postgres.
+
+So the round trip is still the open claim: with `DATA_SOURCE=supabase` set and
+the banner **gone**, sign up, create an order, and find the row in the Supabase
+table editor with `status = 'draft'` and a sequence-assigned `order_number`. Do
 that before building on top of it.
+
+**There is no email of any kind yet.** Not auth email beyond Supabase's own
+built-in sender, not order notifications, not the weekly summary. The three
+toggles under Settings → Notifications write to `preferences` and are read by
+nothing. There is also no password-reset flow — no "forgot password" link on
+the login page and no route behind it. See **What's next**.
 
 ---
 
@@ -271,11 +338,32 @@ foundations, app shell, My Tasks, dashboard, order detail.
 
 ## What's next
 
-1. **Confirm the Supabase round trip** on a machine with Docker (above) —
-   now that Phase 1 exists, this also means actually signing in as the demo
-   user and clicking through the real UI, not just checking the database layer.
-2. Deploy to Netlify when there is something worth looking at.
-3. Longer term, if `draft` orders ever need a real client-initiated action
+1. **Confirm the Supabase round trip** with the banner gone (above). Everything
+   else on this list assumes it.
+
+2. **Email.** Nothing sends any today. Two separate systems, often confused:
+
+   - **Auth email** — confirmation, password reset, magic link. Supabase's
+     built-in sender is rate-limited to a handful an hour and is explicitly not
+     for production, so this needs custom SMTP (Resend, Postmark, SendGrid)
+     configured under Authentication → Emails. It also needs a **password-reset
+     flow in the app**, which does not exist: no link on the login page, no
+     route behind it, no `resetPassword` on `DataProvider`.
+   - **Order email** — "your order is in progress", "your piece is ready". The
+     recommended shape is to make the `notifications` table the single source of
+     truth and let email be a *subscriber* to it: migration `0002` already
+     writes exactly one row per client-visible event, so a Database Webhook on
+     `notifications` INSERT → Edge Function → provider API sends the mail
+     without any second definition of "what is worth telling the client". One
+     row, two destinations: the in-app inbox and the inbox.
+
+   That is also where the three Settings toggles finally start meaning
+   something — the Edge Function reads `preferences.notifications` and decides
+   whether to send. Today they are stored and ignored.
+
+3. Deploy to Netlify when there is something worth looking at.
+
+4. Longer term, if `draft` orders ever need a real client-initiated action
    (the "Submit this order" button the canvas prototyped but never wired up),
    that needs an `updateOrder` method on `DataProvider` and a matching Postgres
    UPDATE policy — a real product decision, not a UI fix. See **Phase 1 — what
