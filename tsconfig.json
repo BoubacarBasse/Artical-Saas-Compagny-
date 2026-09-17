@@ -17,5 +17,8 @@
     "paths": { "@/*": ["./src/*"] }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  // supabase/functions is Deno, not Node: it has its own global (`Deno`) and its
+  // own module resolution, so `tsc` checking it here only ever produces false
+  // errors. The Supabase CLI type-checks it on deploy.
+  "exclude": ["node_modules", "supabase/functions"]
 }

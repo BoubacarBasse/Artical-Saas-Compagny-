@@ -311,11 +311,18 @@ the banner **gone**, sign up, create an order, and find the row in the Supabase
 table editor with `status = 'draft'` and a sequence-assigned `order_number`. Do
 that before building on top of it.
 
-**There is no email of any kind yet.** Not auth email beyond Supabase's own
-built-in sender, not order notifications, not the weekly summary. The three
-toggles under Settings → Notifications write to `preferences` and are read by
-nothing. There is also no password-reset flow — no "forgot password" link on
-the login page and no route behind it. See **What's next**.
+**Order-notification email is written but has never run.** The Edge Function in
+`supabase/functions/send-notification-email/` was authored in a container with
+no Deno and no Supabase project, so it has not been deployed, invoked, or seen
+to deliver anything. Treat every claim in it as untested until someone watches
+an email arrive. See **Email** below for the setup, and the walk-through it
+ends with for proving it works.
+
+**Still no auth email and no password-reset flow** — no "forgot password" link
+on the login page, no route behind it, no `resetPassword` on `DataProvider`.
+Supabase's built-in sender handles confirmations only, and is rate-limited to a
+handful an hour. `weeklySummary` is a toggle with nothing behind it either: it
+needs a scheduled job, not a row trigger, and none exists.
 
 ---
 
@@ -336,34 +343,82 @@ foundations, app shell, My Tasks, dashboard, order detail.
 
 ---
 
+## Email
+
+One rule: **`notifications` is the single source of truth, and email is a
+subscriber to it.** Migration `0002` writes exactly one row per thing worth
+telling a client, so a Database Webhook on that table's INSERT gets email for
+free and there is never a second definition of "worth an interruption" to keep
+in sync with the first. One row, two destinations: the in-app inbox and the
+real one.
+
+Email is sent from a webhook rather than from inside the trigger on purpose.
+Emailing from the trigger would put an HTTP round trip inside the transaction
+that changes an order's status, so a slow provider would slow the table editor
+down and a failing one would roll the status change back. An order that did not
+advance because an email bounced is a worse bug than an email that never
+arrived.
+
+### Setting it up
+
+```bash
+npx supabase secrets set RESEND_API_KEY=re_...
+npx supabase secrets set NOTIFY_WEBHOOK_SECRET=<long random string>
+npx supabase secrets set APP_URL=http://localhost:3000
+npx supabase secrets set EMAIL_FROM="Article Orders <onboarding@resend.dev>"
+npx supabase functions deploy send-notification-email
+```
+
+Then Dashboard → Database → Webhooks → new webhook on `notifications`, **INSERT
+only**, HTTP POST at the deployed function, with an `x-webhook-secret` header
+carrying the same string. Without that header check the function is an open
+relay for anyone who learns its URL.
+
+Two things that will bite otherwise:
+
+- **`onboarding@resend.dev` only delivers to the address on the Resend
+  account.** Mail to anyone else is accepted and silently dropped. Real clients
+  need a verified domain.
+- **Seed before you wire the webhook up**, or you will email yourself about
+  orders that "happened" months ago. The function skips rows whose `created_at`
+  is more than five minutes old for exactly this reason, but ordering it the
+  easy way costs nothing.
+
+`system` notifications are deliberately never emailed — "Welcome to Article
+Orders" belongs in the inbox, not someone's mail. `order_update` is gated on
+`preferences.notifications.statusChange` and `order_complete` on `delivered`,
+which is where those Settings toggles finally start meaning something.
+
+### Proving it works
+
+Change one order's `status` in the table editor and watch three things happen:
+the detail page timeline gains a row, the Inbox badge increments, and the email
+arrives. If the first two happen and the third does not, it is the webhook or
+the function — check Dashboard → Edge Functions → Logs, which is where the
+`skipped:` reasons show up.
+
+---
+
 ## What's next
 
 1. **Confirm the Supabase round trip** with the banner gone (above). Everything
    else on this list assumes it.
 
-2. **Email.** Nothing sends any today. Two separate systems, often confused:
+2. **Deploy and prove the notification email** (see **Email** above). It is
+   written and committed; nobody has watched it send anything.
 
-   - **Auth email** — confirmation, password reset, magic link. Supabase's
-     built-in sender is rate-limited to a handful an hour and is explicitly not
-     for production, so this needs custom SMTP (Resend, Postmark, SendGrid)
-     configured under Authentication → Emails. It also needs a **password-reset
-     flow in the app**, which does not exist: no link on the login page, no
-     route behind it, no `resetPassword` on `DataProvider`.
-   - **Order email** — "your order is in progress", "your piece is ready". The
-     recommended shape is to make the `notifications` table the single source of
-     truth and let email be a *subscriber* to it: migration `0002` already
-     writes exactly one row per client-visible event, so a Database Webhook on
-     `notifications` INSERT → Edge Function → provider API sends the mail
-     without any second definition of "what is worth telling the client". One
-     row, two destinations: the in-app inbox and the inbox.
+3. **A verified sending domain**, whenever real clients are in play. Until then
+   the test sender only reaches your own address, which makes the whole feature
+   untestable against anyone else.
 
-   That is also where the three Settings toggles finally start meaning
-   something — the Edge Function reads `preferences.notifications` and decides
-   whether to send. Today they are stored and ignored.
+4. **Password reset.** The gap most likely to produce a support request: a user
+   who forgets their password currently has no route back in. Needs a link on
+   the login page, a reset route, `resetPassword` on both providers, and custom
+   SMTP under Authentication → Emails.
 
-3. Deploy to Netlify when there is something worth looking at.
+5. Deploy to Netlify when there is something worth looking at.
 
-4. Longer term, if `draft` orders ever need a real client-initiated action
+6. Longer term, if `draft` orders ever need a real client-initiated action
    (the "Submit this order" button the canvas prototyped but never wired up),
    that needs an `updateOrder` method on `DataProvider` and a matching Postgres
    UPDATE policy — a real product decision, not a UI fix. See **Phase 1 — what
