@@ -55,6 +55,9 @@ Light mode only. Committed to in planning; it also halves the token layer.
 | Design | **Done.** Canvas returned from Claude Design, in `design/canvas/`. |
 | Backend on real Postgres | **Done and verified.** Migration + seed + RLS proven against Postgres 16. |
 | 1 — build the signed-in UI | **Done.** Every route below is real, against the canvas. |
+| Hosted Supabase | **Live and verified.** Schema pushed; app signed in against it with the banner gone. |
+| Order-notification email | **Written, never run.** Edge Function committed, not deployed. |
+| Password reset | **Missing.** No link, no route, no provider method. |
 | Deploy to Netlify | Deferred by choice. `netlify.toml` and the plugin are already in place. |
 
 ### Phase 1 — what got built
@@ -299,17 +302,23 @@ Verified against a real Postgres 16, not just reasoned about:
 **A hosted project now has the schema.** `supabase db push` applied `0001` to a
 real hosted project cleanly, storage policy included.
 
-**Still not verified:** the app talking to Supabase over HTTP. Every run so far
-has been in mock mode — the first attempt *looked* like a successful Supabase
-sign-in, but the demo-mode banner was on screen and the dashboard showed the
-thirteen fixture orders, which is the mock provider doing exactly what it is
-supposed to do. Sign-up succeeding and a wrong password being rejected prove the
-mock's auth, not Postgres.
+**The round trip is verified.** `DATA_SOURCE=supabase` against a hosted project,
+banner gone, signed in through real GoTrue, dashboard rendering the empty states
+off an empty Postgres. All four tables and their foreign keys are live. This was
+the open claim from Phase 0 onward and it is now closed.
 
-So the round trip is still the open claim: with `DATA_SOURCE=supabase` set and
-the banner **gone**, sign up, create an order, and find the row in the Supabase
-table editor with `status = 'draft'` and a sequence-assigned `order_number`. Do
-that before building on top of it.
+Worth recording how it *first* went wrong, because the failure is convincing:
+an earlier attempt looked like a successful Supabase sign-in — sign-up worked,
+a wrong password was rejected — but the demo-mode banner was on screen and the
+dashboard showed the thirteen fixture orders. That was the mock provider doing
+exactly what it is supposed to do. **The banner is the only reliable tell.**
+Auth behaving correctly proves nothing about which provider is behind it, since
+both implement the same contract; that is the entire point of the abstraction
+and also the reason it can fool you.
+
+Still unproven on hosted: **the 0002 staff triggers** (verified against Postgres
+16 locally, never watched on a real project) and **anything to do with orders**,
+since no order has been created there yet.
 
 **Order-notification email is written but has never run.** The Edge Function in
 `supabase/functions/send-notification-email/` was authored in a container with
