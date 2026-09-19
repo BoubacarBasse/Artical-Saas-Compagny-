@@ -55,7 +55,7 @@ Light mode only. Committed to in planning; it also halves the token layer.
 | Design | **Done.** Canvas returned from Claude Design, in `design/canvas/`. |
 | Backend on real Postgres | **Done and verified.** Migration + seed + RLS proven against Postgres 16. |
 | 1 — build the signed-in UI | **Done.** Every route below is real, against the canvas. |
-| Hosted Supabase | **Live and verified.** Schema pushed; app signed in against it with the banner gone. |
+| Hosted Supabase | **Live and verified.** Schema pushed; app signed in against it with the banner gone. No data yet — see **What's next**. |
 | Order-notification email | **Written, never run.** Edge Function committed, not deployed. |
 | Password reset | **Missing.** No link, no route, no provider method. |
 | Deploy to Netlify | Deferred by choice. `netlify.toml` and the plugin are already in place. |
@@ -104,13 +104,13 @@ hand: sign up → create an order → filter/sort the orders list → open the
 order detail page → mark notifications read → edit profile → toggle a
 notification preference → set order defaults → change password → sign out →
 sign back in with the *new* password. Zero console or page errors across the
-run. Not yet re-verified against real Supabase (still gated on Docker in this
-environment, see below) — the pages call the same `DataProvider` interface
-either way, but that is a claim until it is actually clicked through.
-
-Every page under `src/app/` is still a Phase 0 placeholder — a bare `<h1>` with
-a `data-testid`. They exist so routing and the middleware guard are real and
-testable. Phase 1 replaces all of them.
+run. That run was against the mock. The Supabase path has been verified at both
+ends but not through the middle: the schema, triggers and every RLS rule were
+proven against Postgres 16 at the SQL level, and the app has signed in against
+hosted Supabase with the banner gone. What has *not* happened is the same
+click-through — create, filter, sort, open, mark read, edit profile — against
+Supabase rather than the mock. The pages call the same `DataProvider` interface
+either way, but that is reasoning, not evidence.
 
 ---
 
@@ -433,8 +433,12 @@ the function — check Dashboard → Edge Functions → Logs, which is where the
 
 ## What's next
 
-1. **Confirm the Supabase round trip** with the banner gone (above). Everything
-   else on this list assumes it.
+1. **Seed the hosted project and witness `0002` there.** The round trip is
+   confirmed and the schema is live, but hosted currently holds zero orders, so
+   nothing on it has ever exercised the staff triggers. Run `seed_hosted.sql`
+   from the SQL editor, then change one order's `status` in the table editor and
+   check the detail page gains a timeline row and the inbox badge moves. Both
+   are proven against Postgres 16 here; neither has been seen on Supabase.
 
 2. **Deploy and prove the notification email** (see **Email** above). It is
    written and committed; nobody has watched it send anything.
