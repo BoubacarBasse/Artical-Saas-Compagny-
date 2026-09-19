@@ -55,8 +55,9 @@ Light mode only. Committed to in planning; it also halves the token layer.
 | Design | **Done.** Canvas returned from Claude Design, in `design/canvas/`. |
 | Backend on real Postgres | **Done and verified.** Migration + seed + RLS proven against Postgres 16. |
 | 1 — build the signed-in UI | **Done.** Every route below is real, against the canvas. |
-| Hosted Supabase | **Live, verified, and seeded.** Schema pushed; app signed in with the banner gone; seeded on hosted and confirmed at 13 orders / 53 events / 2 unread. |
-| Order-notification email | **Written, never run.** Edge Function committed, not deployed. |
+| Hosted Supabase | **Live, verified, and seeded.** Schema pushed; app signed in with the banner gone; seeded and confirmed at 13 orders / 53 events / 2 unread. |
+| Staff workflow on hosted | **Witnessed.** One `status` cell edited in the table editor moved the dashboard tiles, added the timeline row and incremented the inbox badge, with nothing else touched. |
+| Order-notification email | **Written, never run — and deprioritised by decision.** Edge Function committed, not deployed. Do not treat this as an open task; it was consciously set aside. |
 | Password reset | **Missing.** No link, no route, no provider method. |
 | Deploy to Netlify | Deferred by choice. `netlify.toml` and the plugin are already in place. |
 
@@ -350,6 +351,14 @@ Verified against a real Postgres 16, not just reasoned about:
   2 unread, 53 events.
 - Both 0001 triggers fire: a new auth user gets a profile; a new order gets its
   `submitted` event.
+- **The staff workflow was witnessed on hosted Supabase, not just locally.**
+  One `status` cell changed from `draft` to `in_progress` in the table editor,
+  nothing else touched: the dashboard moved Draft 1 to 0 and In progress 1 to
+  2, the inbox badge went 2 to 3, and the order detail page gained its timeline
+  row. That closes the last claim in this project that rested on local
+  Postgres alone. The 0001 submitted trigger was proven there too, indirectly
+  and earlier: the seed inserts 40 events and the table held 53, the missing 13
+  being one per order.
 - **The 0002 staff-workflow triggers do what they claim.** Walking an order
   draft → in progress → pending review → completed writes four history rows with
   the mock's exact wording and three notifications with the mock's exact titles;
@@ -522,33 +531,38 @@ the function — check Dashboard → Edge Functions → Logs, which is where the
 
 ## What's next
 
-1. **Witness `0002` on hosted.** The seed has now run there, so the data is in
-   place. What remains is one cell edit: change an order `status` in the table
-   editor and confirm the detail page gains a timeline row and the inbox badge
-   moves. The triggers are proven against Postgres 16 here and have never been
-   seen firing on Supabase. Note that the seed already proved the *0001*
-   submitted trigger fires on hosted, indirectly: it inserted 40 events and the
-   table holds 53, and the missing 13 are one per order from that trigger.
+**The core product is done and proven end to end.** Sign-up, sign-in, the
+dashboard, the orders list, the detail page, the inbox and the staff workflow
+all work against hosted Supabase with real data. What follows is what is left,
+in the order it is worth doing.
 
-2. **Deploy and prove the notification email** (see **Email** above). It is
-   written and committed; nobody has watched it send anything.
+1. **Password reset.** The largest remaining hole, and the one most likely to
+   produce a support request: a user who forgets their password has no route
+   back in at all. Needs a link on the login page, a reset route,
+   `resetPassword` on both providers, and custom SMTP under
+   Authentication → Emails. Small, self-contained, and unlike the email feature
+   it is a gap rather than an enhancement.
 
-3. **A verified sending domain**, whenever real clients are in play. Until then
-   the test sender only reaches your own address, which makes the whole feature
-   untestable against anyone else.
+2. **Deploy to Netlify.** `netlify.toml` and the plugin are already committed
+   and `npm run build` is clean. Needs the four environment variables set in
+   the Netlify UI, and the site URL added under Supabase
+   Authentication → URL Configuration, or confirmation emails will keep
+   pointing at `localhost:3000`.
 
-4. **Password reset.** The gap most likely to produce a support request: a user
-   who forgets their password currently has no route back in. Needs a link on
-   the login page, a reset route, `resetPassword` on both providers, and custom
-   SMTP under Authentication → Emails.
+3. **Order-notification email — set aside deliberately, not forgotten.** The
+   Edge Function is written and committed and has never run. It was
+   deprioritised by an explicit decision, so do not resurrect it as an open
+   task; the signed-in inbox already carries every notification, and email is
+   an additional delivery channel rather than a missing feature. If it is
+   picked up again it also needs a verified sending domain, since the test
+   sender only reaches your own address.
 
-5. Deploy to Netlify when there is something worth looking at.
-
-6. Longer term, if `draft` orders ever need a real client-initiated action
+4. Longer term, if `draft` orders ever need a real client-initiated action
    (the "Submit this order" button the canvas prototyped but never wired up),
    that needs an `updateOrder` method on `DataProvider` and a matching Postgres
    UPDATE policy — a real product decision, not a UI fix. See **Phase 1 — what
-   got built** above.
+   got built** above. Note this is now moot for the seeded data, since nothing
+   sits in `draft` any more.
 
 ---
 
