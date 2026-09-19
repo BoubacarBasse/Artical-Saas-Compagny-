@@ -260,18 +260,35 @@ env file says.
 
 `supabase/seed_hosted.sql` puts the same thirteen sample orders on a hosted
 project. Unlike `seed.sql` it creates no users — it looks up an account you
-already signed up for, by email, and refuses with a readable message if that
-account does not exist or already has orders. Paste the whole file into the SQL
-editor, change the one marked email line, run it; the cleanup statement at the
-bottom removes everything it inserted.
+already signed up for, by email. Paste the whole file into the SQL editor,
+change the one marked email line, run it. The last line of the result says what
+happened: `SEEDED OK`, `NO ACCOUNT`, or `ALREADY SEEDED`. The cleanup statement
+at the bottom removes everything it inserted.
 
-The email used to live in a `\set` variable, which was wrong: `\set` is a psql
-client command and the SQL editor talks to the server directly, so it never
-sees it. That made the file impossible to run without hand-editing, and the
-hand-edit is what broke it — the first real attempt mangled a table name three
-statements away from the line being changed. A script that only works after you
-edit it should be edited in exactly one obvious place, and that place should be
-a normal part of the language it is written in.
+**It is one statement**, from a single `with` to a single semicolon at the very
+end — the account lookup, the spec rows and all three inserts are CTEs of it.
+That is deliberate and it is the second rewrite this file has needed, both for
+the same underlying reason: it kept being written for a psql-shaped world and
+run in a browser.
+
+The first version put the email in a `\set` variable. `\set` is a psql client
+command; the SQL editor talks to the server directly and never sees it, so the
+file could not be run without hand-editing, and the hand-edit is what broke it
+— the first attempt mangled a table name three statements from the line being
+changed.
+
+The second version fixed that and still failed on hosted, with `relation
+"seed_user" does not exist`. Every piece of it was proven to work there in
+isolation: a temp table created and selected from, a `do` block reading one,
+the entire first half of the file reporting correct counts. Only the whole
+thing together failed, and it failed identically with permanent tables instead
+of temporary ones, which rules out temp-table scope. The editor rolls the batch
+back, so there is nothing left to inspect afterwards.
+
+So this version removes what the editor can chunk rather than trying to predict
+how it chunks. With one statement there is no cross-statement state to lose.
+The cost is the loud `do`-block guards, which cannot live inside a statement —
+hence the result line.
 
 ---
 
@@ -296,13 +313,19 @@ Verified against a real Postgres 16, not just reasoned about:
   `permission denied`. The history is written *for* the client, never *by* them.
 - `seed_hosted.sql` produces the same 13 / 9 / 53 / 5-with-2-unread shape as the
   mock, takes its order numbers from the live sequence rather than hardcoding
-  them, and refuses with a readable message both for an unknown email and for an
-  account that already has orders. It was also run **as a single multi-statement
-  batch**, which is how the Supabase SQL editor submits it, rather than
-  statement-by-statement the way `psql -f` does — the temporary tables survive
-  that, and the earlier `\set` version did not. The cleanup block at the bottom
-  was run too: it leaves orders, events and notifications all at zero, and the
-  seed then runs clean a second time.
+  them, and reports `NO ACCOUNT` for an unknown email and `ALREADY SEEDED` for
+  an account that already has orders — inserting nothing in both cases. The
+  cleanup block at the bottom was run too: it leaves orders, events and
+  notifications all at zero, and the seed then runs clean a second time.
+
+  **A correction, because the earlier version of this line was false.** It used
+  to claim the file had been run "as a single multi-statement batch, which is
+  how the Supabase SQL editor submits it". The batch part was true; the clause
+  after it was not. `psql -c "$(cat file)"` is not the hosted SQL editor, and
+  nothing in that test touched Supabase. On hosted the file failed with
+  `relation "seed_user" does not exist`, and the rewrite below exists because
+  of it. Verifying against a local stand-in and then describing the result in
+  terms of production is how a claim gets believed without ever being tested.
 - A new order inserted as `authenticated` comes out `draft` with a sequence
   number, regardless of what the client asked for.
 - **Every RLS claim above was tested by impersonating users at the SQL level.**
