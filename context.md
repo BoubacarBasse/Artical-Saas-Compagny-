@@ -290,6 +290,27 @@ how it chunks. With one statement there is no cross-statement state to lose.
 The cost is the loud `do`-block guards, which cannot live inside a statement —
 hence the result line.
 
+That rewrite then failed on hosted too, with `syntax error at end of input` at
+LINE 0, and this one was self-inflicted and instructive. A comment in the new
+header read `statement's snapshot`. To a splitter that tracks quote state but
+does not skip `--` comments, that lone apostrophe opens a string literal which
+never closes, so it swallows the terminating semicolon and submits an
+unterminated statement. LINE 0 means the parser hit the end of input while
+still expecting more.
+
+Both hosted failures were therefore the same class of bug — the editor and
+Postgres disagreeing about where a statement ends — reached by two different
+routes. `tests/unit/seed-sql.spec.ts` now enforces both rules on
+`seed_hosted.sql` and `cleanup_hosted.sql`: exactly one statement, and no
+apostrophe in any comment. The rule is absolute rather than "keep the count
+even", because nobody can follow a parity rule while writing prose. Writing
+the warning comment itself broke it twice before the test caught it.
+
+The cleanup used to be a commented-out block at the foot of the seed. It is now
+`supabase/cleanup_hosted.sql`, a runnable file with the same one-line email
+edit point — which also lets the seed file end at its semicolon with nothing
+after it.
+
 ---
 
 ## What is verified, and what is not

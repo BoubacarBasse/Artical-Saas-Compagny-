@@ -146,9 +146,17 @@ ids as materialized (
 -- live and may already have issued numbers for orders created through the app,
 -- so the default is left to assign them and stay consistent.
 --
--- The `not exists` is the re-run guard that used to be a DO block: the
--- statement's snapshot is taken before any of it runs, so this sees orders
--- that were already there and not the ones being inserted right now.
+-- The `not exists` is the re-run guard that used to be a DO block. A snapshot
+-- is taken before any of this statement runs, so it sees orders that were
+-- already there and not the ones being inserted right now.
+--
+-- Note: no apostrophes anywhere in the comments of this file, deliberately.
+-- A single quote character in a comment reads as the opening of a string
+-- literal to a naive statement splitter, which then swallows the terminating
+-- semicolon and submits an unterminated statement. That is what a LINE 0
+-- `syntax error at end of input` means, and one possessive apostrophe in this
+-- very comment block caused it once already.
+-- tests/unit/seed-sql.spec.ts enforces the rule.
 ins_orders as (
   insert into public.orders (
     id, user_id, title, brief, keywords, format, word_count,
@@ -282,16 +290,3 @@ select
   (select count(*) from ins_events)               as timeline_events,
   (select count(*) from ins_notifications)
     + (select count(*) from ins_welcome)          as notifications;
-
--- ===========================================================================
--- Cleanup — removes everything this file inserted, for one account
--- ===========================================================================
--- Deleting the orders cascades to their events, so the notifications are
--- removed explicitly first. Run both, in this order.
---
---   delete from public.notifications
---    where user_id = (select id from auth.users where email = 'you@example.com');
---
---   delete from public.orders
---    where user_id = (select id from auth.users where email = 'you@example.com');
--- ===========================================================================
