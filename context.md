@@ -261,9 +261,17 @@ env file says.
 `supabase/seed_hosted.sql` puts the same thirteen sample orders on a hosted
 project. Unlike `seed.sql` it creates no users — it looks up an account you
 already signed up for, by email, and refuses with a readable message if that
-account does not exist or already has orders. Set the email on the `\set` line
-at the top, run it in the SQL editor, and the cleanup statement at the bottom
-removes everything it inserted.
+account does not exist or already has orders. Paste the whole file into the SQL
+editor, change the one marked email line, run it; the cleanup statement at the
+bottom removes everything it inserted.
+
+The email used to live in a `\set` variable, which was wrong: `\set` is a psql
+client command and the SQL editor talks to the server directly, so it never
+sees it. That made the file impossible to run without hand-editing, and the
+hand-edit is what broke it — the first real attempt mangled a table name three
+statements away from the line being changed. A script that only works after you
+edit it should be edited in exactly one obvious place, and that place should be
+a normal part of the language it is written in.
 
 ---
 
@@ -289,7 +297,12 @@ Verified against a real Postgres 16, not just reasoned about:
 - `seed_hosted.sql` produces the same 13 / 9 / 53 / 5-with-2-unread shape as the
   mock, takes its order numbers from the live sequence rather than hardcoding
   them, and refuses with a readable message both for an unknown email and for an
-  account that already has orders.
+  account that already has orders. It was also run **as a single multi-statement
+  batch**, which is how the Supabase SQL editor submits it, rather than
+  statement-by-statement the way `psql -f` does — the temporary tables survive
+  that, and the earlier `\set` version did not. The cleanup block at the bottom
+  was run too: it leaves orders, events and notifications all at zero, and the
+  seed then runs clean a second time.
 - A new order inserted as `authenticated` comes out `draft` with a sequence
   number, regardless of what the client asked for.
 - **Every RLS claim above was tested by impersonating users at the SQL level.**
@@ -297,7 +310,17 @@ Verified against a real Postgres 16, not just reasoned about:
   order completed, delete it, insert one already completed, create one on another
   account, rewrite a notification title, write their own history, or change their
   profile email. A signed-out caller sees nothing.
-- 83 unit tests pass; typecheck clean.
+- 84 unit tests pass; typecheck clean.
+
+One test had to be moved rather than fixed. `seed.spec.ts` asserted that the
+seeded deliveries left at least one empty month in the seven-month chart window,
+so the design would have to cope with a zero bar. The seed places deliveries in
+days-ago offsets, so which calendar months they fall in drifts with the date the
+suite runs on, and on 19 Sep 2026 all nine spread across all seven buckets and
+the assertion failed. Nothing was broken. The requirement is real, but it
+belongs to `completionsByMonth`, which is pure and takes an injectable `now`, so
+it is now pinned and asserted there. A test that passes or fails on the calendar
+is not testing the code.
 
 **A hosted project now has the schema.** `supabase db push` applied `0001` to a
 real hosted project cleanly, storage policy included.

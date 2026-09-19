@@ -123,16 +123,40 @@ test.describe("chart realism", () => {
     }
   });
 
-  test("the chart has both activity and at least one quiet month", () => {
+  test("the chart always has something to draw", () => {
     const delivered = seedEvents(USER)
       .filter((e) => e.kind === "delivered")
       .map((e) => e.createdAt);
     const buckets = completionsByMonth(delivered, CHART_MONTHS);
 
-    // Something to draw...
     expect(buckets.reduce((n, b) => n + b.count, 0)).toBeGreaterThan(0);
-    // ...and an honest gap, so the design has to cope with a zero.
-    expect(buckets.some((b) => b.count === 0)).toBe(true);
+  });
+
+  // This used to also assert that the seeded deliveries left at least one month
+  // of the window empty, so the design had to cope with a zero bar. That is a
+  // real requirement and it was being checked in the wrong place: the seed lays
+  // its deliveries out in days-ago offsets, so which calendar months they land
+  // in — and therefore whether any month comes out empty — moves with the date
+  // the suite happens to run on. It held for months and then failed on a day
+  // when all nine deliveries happened to spread across all seven buckets.
+  //
+  // A test that passes or fails on the calendar is not testing the code. The
+  // requirement belongs to the bucketing function, which is pure and takes an
+  // injectable `now`, so it can be pinned and stated outright.
+  test("a month with no deliveries is kept, as a zero", () => {
+    const now = new Date("2026-09-19T00:00:00Z");
+    const buckets = completionsByMonth(
+      ["2026-09-01T00:00:00Z", "2026-07-30T00:00:00Z"],
+      CHART_MONTHS,
+      now,
+    );
+
+    expect(buckets.map((b) => b.label)).toEqual([
+      "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep",
+    ]);
+    // The quiet months are present and zero, not dropped — dropping them would
+    // close the gaps and make the account look busier than it is.
+    expect(buckets.map((b) => b.count)).toEqual([0, 0, 0, 0, 1, 0, 1]);
   });
 });
 

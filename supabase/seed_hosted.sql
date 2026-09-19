@@ -15,14 +15,21 @@
 -- It is a testing convenience, not product data. Delete it whenever you like —
 -- the cleanup statement is at the bottom of this file.
 --
--- SET YOUR EMAIL ON THE NEXT LINE.
+-- Paste this whole file into the SQL editor and change exactly one thing: the
+-- email address a few lines down. Nothing else in here needs editing, and
+-- editing anything else is the most likely way to break it.
 -- ===========================================================================
 
-\set target_email 'you@example.com'
-
 -- Resolve the account, and fail loudly rather than silently seeding nothing.
+--
+-- The email is written inline rather than held in a \set variable, because
+-- \set is a psql client command: the Supabase SQL editor talks to the server
+-- directly and never sees it. A file that only runs after you hand-edit it is
+-- a file that breaks when you hand-edit it.
 create temporary table seed_user as
-select id from auth.users where email = :'target_email';
+select id from auth.users
+--                        vvv  YOUR EMAIL HERE, and nowhere else  vvv
+ where email = 'you@example.com';
 
 do $$
 begin
