@@ -1,31 +1,14 @@
--- ===========================================================================
--- Hosted demo cleanup -- removes everything seed_hosted.sql inserted
--- ===========================================================================
--- Paste this whole file into the Supabase SQL editor and change exactly one
--- thing: the email address a few lines down. It must be the same address you
--- seeded with.
+-- Undoes seed_hosted.sql for one account. Deleting an order cascades to its
+-- order_events, so only notifications and orders are named here. Leaves the
+-- account itself alone, so you stay signed in and can re-seed immediately.
 --
--- This removes the demo orders, their timelines and their notifications for
--- one account. It does not touch the account itself, so you stay signed in and
--- can re-run seed_hosted.sql straight afterwards.
---
--- Like the seed, this is one statement, from a single `with` to a single
--- semicolon at the end, and its comments contain no apostrophes. Both rules
--- exist because the hosted SQL editor splits a script client-side before
--- sending it, and both of this projects earlier seed failures were that
--- splitter disagreeing with Postgres about where a statement ends. See the
--- header of seed_hosted.sql and tests/unit/seed-sql.spec.ts.
---
--- Deleting an order cascades to its order_events rows, so those need no
--- clause of their own. The notifications go first because they point at the
--- orders.
--- ===========================================================================
+-- Same two rules as seed_hosted.sql: one statement, no apostrophes in
+-- comments. See tests/unit/seed-sql.spec.ts and context.md.
 
 with
 
 me as (
   select id from auth.users
---                        vvv  YOUR EMAIL HERE, and nowhere else  vvv
    where email = 'you@example.com'
 ),
 
@@ -44,10 +27,10 @@ del_orders as (
 select
   case
     when not exists (select 1 from me)
-      then 'NO ACCOUNT -- nothing was deleted. No user has that email.'
+      then 'NO ACCOUNT. Nothing was deleted. No user has that email.'
     when not exists (select 1 from del_orders)
          and not exists (select 1 from del_notifications)
-      then 'NOTHING TO DELETE -- that account had no demo data.'
+      then 'NOTHING TO DELETE. That account had no demo data.'
     else 'CLEANED'
   end                                           as result,
   (select count(*) from del_orders)             as orders_deleted,

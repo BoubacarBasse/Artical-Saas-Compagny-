@@ -55,7 +55,7 @@ Light mode only. Committed to in planning; it also halves the token layer.
 | Design | **Done.** Canvas returned from Claude Design, in `design/canvas/`. |
 | Backend on real Postgres | **Done and verified.** Migration + seed + RLS proven against Postgres 16. |
 | 1 — build the signed-in UI | **Done.** Every route below is real, against the canvas. |
-| Hosted Supabase | **Live and verified.** Schema pushed; app signed in against it with the banner gone. No data yet — see **What's next**. |
+| Hosted Supabase | **Live, verified, and seeded.** Schema pushed; app signed in with the banner gone; `seed_hosted.sql` run on hosted returning `SEEDED OK 13 / 40 / 5`. |
 | Order-notification email | **Written, never run.** Edge Function committed, not deployed. |
 | Password reset | **Missing.** No link, no route, no provider method. |
 | Deploy to Netlify | Deferred by choice. `netlify.toml` and the plugin are already in place. |
@@ -291,25 +291,37 @@ The cost is the loud `do`-block guards, which cannot live inside a statement —
 hence the result line.
 
 That rewrite then failed on hosted too, with `syntax error at end of input` at
-LINE 0, and this one was self-inflicted and instructive. A comment in the new
-header read `statement's snapshot`. To a splitter that tracks quote state but
-does not skip `--` comments, that lone apostrophe opens a string literal which
-never closes, so it swallows the terminating semicolon and submits an
-unterminated statement. LINE 0 means the parser hit the end of input while
-still expecting more.
+LINE 0. A comment in its new header read `statement's snapshot`, and to a
+splitter that tracks quote state without skipping `--` comments, that lone
+apostrophe opens a string literal which never closes. It swallows the
+terminating semicolon and submits an unterminated statement, which is what
+LINE 0 means: the parser reached the end of the input still expecting more.
 
-Both hosted failures were therefore the same class of bug — the editor and
-Postgres disagreeing about where a statement ends — reached by two different
-routes. `tests/unit/seed-sql.spec.ts` now enforces both rules on
-`seed_hosted.sql` and `cleanup_hosted.sql`: exactly one statement, and no
-apostrophe in any comment. The rule is absolute rather than "keep the count
-even", because nobody can follow a parity rule while writing prose. Writing
-the warning comment itself broke it twice before the test caught it.
+Removing that apostrophe was not enough on its own, and the third failure is
+the one that settles it. **What finally worked on hosted was stripping every
+prose comment out of the file.** The SQL did not change — only the comments
+around it — and the same statement that had failed three times returned
+`SEEDED OK | 13 | 40 | 5` on the first try.
+
+So the lesson is not "avoid apostrophes", it is broader: **a file whose job is
+to be pasted into a browser text box is not the place for prose.** Every one of
+these failures came from the commentary, never from the SQL, and each fix
+attracted more commentary explaining the last one. The explanation belongs
+here, in the file you are reading. `seed_hosted.sql` and `cleanup_hosted.sql`
+now carry six lines of header each and nothing else.
+
+`tests/unit/seed-sql.spec.ts` enforces three rules on both files: exactly one
+statement, no apostrophe in any comment, and no `--` inside a string literal
+(a splitter that strips comments without tracking quotes truncates the line).
+The apostrophe rule is absolute rather than "keep the count even", because a
+parity rule is not something anyone can follow while writing prose — writing
+the warning comment about apostrophes reintroduced the bug twice before the
+test caught it.
 
 The cleanup used to be a commented-out block at the foot of the seed. It is now
 `supabase/cleanup_hosted.sql`, a runnable file with the same one-line email
-edit point — which also lets the seed file end at its semicolon with nothing
-after it.
+edit point, which also lets the seed end at its semicolon with nothing after
+it.
 
 ---
 
@@ -477,12 +489,13 @@ the function — check Dashboard → Edge Functions → Logs, which is where the
 
 ## What's next
 
-1. **Seed the hosted project and witness `0002` there.** The round trip is
-   confirmed and the schema is live, but hosted currently holds zero orders, so
-   nothing on it has ever exercised the staff triggers. Run `seed_hosted.sql`
-   from the SQL editor, then change one order's `status` in the table editor and
-   check the detail page gains a timeline row and the inbox badge moves. Both
-   are proven against Postgres 16 here; neither has been seen on Supabase.
+1. **Witness `0002` on hosted.** The seed has now run there, so the data is in
+   place. What remains is one cell edit: change an order `status` in the table
+   editor and confirm the detail page gains a timeline row and the inbox badge
+   moves. The triggers are proven against Postgres 16 here and have never been
+   seen firing on Supabase. Note that the seed already proved the *0001*
+   submitted trigger fires on hosted, indirectly: it inserted 40 events and the
+   table holds 53, and the missing 13 are one per order from that trigger.
 
 2. **Deploy and prove the notification email** (see **Email** above). It is
    written and committed; nobody has watched it send anything.

@@ -43,6 +43,21 @@ for (const name of FILES) {
       ).toEqual([]);
     });
 
+    test("no string literal contains a comment marker", () => {
+      // A splitter that strips `--` to end of line without tracking quote state
+      // will truncate a line whose string literal contains one, cutting the
+      // statement in half. Keeping the sequence out of the data entirely is
+      // cheaper than hoping the editor handles it.
+      const offenders = SQL.map((line, i) => [i + 1, line] as const).filter(
+        ([, line]) => !isComment(line) && /'[^']*--/.test(line),
+      );
+
+      expect(
+        offenders.map(([n, line]) => `line ${n}: ${line.trim()}`),
+        "a comment marker inside a string literal can truncate the statement",
+      ).toEqual([]);
+    });
+
     test("the seed is exactly one statement", () => {
       // Earlier versions were ordinary multi-statement scripts using temporary
       // tables to pass state along. They worked locally and failed on hosted with
