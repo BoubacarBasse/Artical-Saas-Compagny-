@@ -55,7 +55,7 @@ Light mode only. Committed to in planning; it also halves the token layer.
 | Design | **Done.** Canvas returned from Claude Design, in `design/canvas/`. |
 | Backend on real Postgres | **Done and verified.** Migration + seed + RLS proven against Postgres 16. |
 | 1 — build the signed-in UI | **Done.** Every route below is real, against the canvas. |
-| Hosted Supabase | **Live, verified, and seeded.** Schema pushed; app signed in with the banner gone; `seed_hosted.sql` run on hosted returning `SEEDED OK 13 / 40 / 5`. |
+| Hosted Supabase | **Live, verified, and seeded.** Schema pushed; app signed in with the banner gone; seeded on hosted and confirmed at 13 orders / 53 events / 2 unread. |
 | Order-notification email | **Written, never run.** Edge Function committed, not deployed. |
 | Password reset | **Missing.** No link, no route, no provider method. |
 | Deploy to Netlify | Deferred by choice. `netlify.toml` and the plugin are already in place. |
@@ -297,18 +297,33 @@ apostrophe opens a string literal which never closes. It swallows the
 terminating semicolon and submits an unterminated statement, which is what
 LINE 0 means: the parser reached the end of the input still expecting more.
 
-Removing that apostrophe was not enough on its own, and the third failure is
-the one that settles it. **What finally worked on hosted was stripping every
-prose comment out of the file.** The SQL did not change — only the comments
-around it — and the same statement that had failed three times returned
-`SEEDED OK | 13 | 40 | 5` on the first try.
+That apostrophe explanation was plausible, produces exactly that error, and
+was **not what was happening.** It is recorded here because being confidently
+wrong twice in a row about the same file is the useful part of this story.
 
-So the lesson is not "avoid apostrophes", it is broader: **a file whose job is
-to be pasted into a browser text box is not the place for prose.** Every one of
-these failures came from the commentary, never from the SQL, and each fix
-attracted more commentary explaining the last one. The explanation belongs
-here, in the file you are reading. `seed_hosted.sql` and `cleanup_hosted.sql`
-now carry six lines of header each and nothing else.
+The real cause, which only surfaced when the user described what they were
+doing rather than what they were seeing: **the paste was being truncated.** The
+file was too long to go into the SQL editor in one go, so the editor received a
+statement that genuinely stopped in the middle — which is precisely and
+literally what `syntax error at end of input` at LINE 0 reports. No splitter
+subtlety, no quote-state theory. The input really did end early.
+
+Stripping the prose comments helped, but not for the reason the commit message
+claimed: it cut the file from 15.3KB to 9.7KB. Smaller, not better-formed. The
+seed still had to be pasted in more than one go before it ran, and then it
+returned `SEEDED OK | 13 | 40 | 5`.
+
+Two things worth taking from it. First, **`syntax error at end of input` means
+the input ended early — start by doubting that the whole file arrived**, before
+theorising about how a parser handles comments. Second, three rounds of
+diagnosis here were spent on the text of the error and none on the mechanics of
+getting the file into the box; the question that solved it was closer to "what
+did you actually do" than to "what did it say".
+
+The comment stripping stays, and so does the rule behind it: a file whose job
+is to be pasted into a browser text box is not the place for prose. It is close
+to the size limit even now, so **expect to paste it in two parts** — assemble
+the whole thing in the editor, then run it once.
 
 `tests/unit/seed-sql.spec.ts` enforces three rules on both files: exactly one
 statement, no apostrophe in any comment, and no `--` inside a string literal
