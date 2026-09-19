@@ -77,10 +77,28 @@ function wantsEmail(kind: NotificationKind, prefs: typeof DEFAULT_NOTIFICATION_P
   }
 }
 
+/**
+ * The notification title carries an order title, and an order title is written
+ * by the client. Interpolating it raw would let someone put markup — or an
+ * `onerror` handler — into an email we send out under our own domain. It lands
+ * in their own inbox today, but "the attacker is also the victim" is a property
+ * of the current recipient list, not of this function, and a digest or a
+ * CC to staff would quietly turn it into a real one.
+ */
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function renderEmail(title: string, orderUrl: string | null): string {
+  const safeTitle = escapeHtml(title);
   const button = orderUrl
     ? `<p style="margin:28px 0 0 0">
-         <a href="${orderUrl}"
+         <a href="${escapeHtml(orderUrl)}"
             style="display:inline-block;background:#b4502f;color:#ffffff;text-decoration:none;
                    padding:11px 18px;border-radius:7px;font-size:14px;font-weight:600">
            View the order
@@ -102,7 +120,7 @@ function renderEmail(title: string, orderUrl: string | null): string {
               <td style="font-family:'IBM Plex Sans',Helvetica,Arial,sans-serif;color:#1c1917">
                 <p style="margin:0 0 20px 0;font-size:13px;font-weight:600;color:#b4502f;
                           letter-spacing:.04em">ARTICLE ORDERS</p>
-                <h1 style="margin:0;font-size:19px;line-height:1.35;font-weight:600">${title}</h1>
+                <h1 style="margin:0;font-size:19px;line-height:1.35;font-weight:600">${safeTitle}</h1>
                 ${button}
               </td>
             </tr>

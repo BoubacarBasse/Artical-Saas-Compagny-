@@ -1,11 +1,17 @@
 /**
  * Supabase implementation of DataProvider.
  *
- * Every method resolves the caller from the session and scopes its query with
- * an explicit `eq("user_id", user.id)`. That is belt-and-braces: Row Level
- * Security already makes another user's rows invisible. The explicit filter is
- * there so the query reads the same way as the mock provider and so a
- * misconfigured policy fails closed rather than silently leaking.
+ * Every method resolves the caller from the session, and every query against a
+ * table that HAS a `user_id` also carries an explicit `eq("user_id", user.id)`.
+ * That is belt-and-braces: Row Level Security already makes another user's rows
+ * invisible. The explicit filter is there so the query reads the same way as
+ * the mock provider and so a misconfigured policy fails closed.
+ *
+ * The exception is `order_events`, which has no `user_id` column — ownership
+ * runs through the parent order. The two queries against it therefore rest on
+ * the RLS policy alone, with nothing behind it. That is the policy those two
+ * queries are betting on, so it is the one worth re-checking after any schema
+ * change: run `supabase/verify_rls.sql`.
  */
 
 import {
@@ -43,6 +49,17 @@ import { computeDashboardStats } from "@/lib/orders/stats";
 import { createClient } from "@/lib/supabase/server";
 
 const NOT_SIGNED_IN = "You need to be signed in to do that";
+
+/**
+ * A Postgres error message names constraints, columns and policies. Handing
+ * that to the browser tells an attacker the shape of the schema and which rule
+ * just stopped them, one failed request at a time. The detail belongs in the
+ * server log, where it is just as useful for debugging and reaches nobody else.
+ */
+function dbError(action: string, error: { message: string; code?: string }): string {
+  console.error(`[supabase] ${action} failed:`, error.code ?? "", error.message);
+  return `Could not ${action}. Please try again.`;
+}
 
 /** Bucket holding finished pieces. Private; access is via short-lived URLs. */
 const DELIVERABLES_BUCKET = "deliverables";
@@ -269,7 +286,7 @@ export const supabaseProvider: DataProvider = {
 
     const from = (page - 1) * perPage;
     const { data, count, error } = await builder.range(from, from + perPage - 1);
-    if (error) throw new Error(`Could not load orders: ${error.message}`);
+    if (error) throw new Error(dbError("load your orders", error));
 
     // Deliberately no signed URLs here. Minting one per row would mean a
     // storage round trip for every list render, and nothing on a list view
@@ -380,7 +397,7 @@ export const supabaseProvider: DataProvider = {
       .select()
       .single();
 
-    if (error) return err(`Could not create that order: ${error.message}`);
+    if (error) return err(dbError("create that order", error));
     return ok(toOrder(data as OrderRow, null));
   },
 
@@ -402,7 +419,7 @@ export const supabaseProvider: DataProvider = {
       .from("orders")
       .select("*")
       .eq("user_id", user.id);
-    if (error) throw new Error(`Could not load dashboard: ${error.message}`);
+    if (error) throw new Error(dbError("load your dashboard", error));
 
     const { data: delivered } = await supabase
       .from("order_events")
@@ -474,7 +491,7 @@ export const supabaseProvider: DataProvider = {
       .eq("user_id", user.id)
       .is("read_at", null);
 
-    if (error) return err(`Could not update your notifications: ${error.message}`);
+    if (error) return err(dbError("update your notifications", error));
     return ok(undefined);
   },
 
@@ -524,7 +541,7 @@ export const supabaseProvider: DataProvider = {
       .select()
       .single();
 
-    if (error) return err(`Could not save your settings: ${error.message}`);
+    if (error) return err(dbError("save your settings", error));
     return ok(toProfile(data as ProfileRow));
   },
 };

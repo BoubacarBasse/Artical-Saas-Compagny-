@@ -175,7 +175,19 @@ export function parsePreferences(value: unknown): Preferences {
 export const profilePatchSchema = z.object({
   fullName: z.string().trim().max(120).nullable().optional(),
   company: z.string().trim().max(120).nullable().optional(),
-  avatarUrl: z.url("Enter a valid URL").nullable().optional(),
+  /**
+   * http(s) only. `z.url()` accepts `javascript:...` — it is a well-formed URL.
+   * Nothing renders this field today, which is exactly why the restriction goes
+   * in now: the day someone drops it into an <img src> or an <a href>, the hole
+   * opens silently and nobody is looking at this schema.
+   */
+  avatarUrl: z
+    .url("Enter a valid URL")
+    .refine((v) => /^https?:\/\//i.test(v), {
+      message: "Enter an http:// or https:// URL",
+    })
+    .nullable()
+    .optional(),
   preferences: preferencesSchema.optional(),
 });
 

@@ -58,6 +58,7 @@ Light mode only. Committed to in planning; it also halves the token layer.
 | Hosted Supabase | **Live, verified, and seeded.** Schema pushed; app signed in with the banner gone; seeded and confirmed at 13 orders / 53 events / 2 unread. |
 | Staff workflow on hosted | **Witnessed.** One `status` cell edited in the table editor moved the dashboard tiles, added the timeline row and incremented the inbox badge, with nothing else touched. |
 | Order-notification email | **Written, never run — and deprioritised by decision.** Edge Function committed, not deployed. Do not treat this as an open task; it was consciously set aside. |
+| Security review | **Done, 19 Sep 2026.** Full checklist below. Six fixes shipped; two items deliberately left open. |
 | Password reset | **Missing.** No link, no route, no provider method. |
 | Deploy to Netlify | Deferred by choice. `netlify.toml` and the plugin are already in place. |
 
@@ -193,8 +194,17 @@ This is the part worth not breaking. It is enforced in the database, not the app
 - The `deliverables` storage bucket is **private**; the detail page mints a
   short-lived signed URL so a download link cannot be usefully forwarded.
 
-The app also filters by `user_id` everywhere. That is belt-and-braces: if a
-policy were wrong, the app filter would hide the mistake rather than fix it.
+The app also filters by `user_id` everywhere it can. That is belt-and-braces: if
+a policy were wrong, the app filter would hide the mistake rather than fix it.
+The exception is `order_events`, which has no `user_id` column — its two queries
+rest on the RLS policy alone.
+
+**To check any of this rather than trust it, run `supabase/verify_rls.sql` in
+the hosted SQL editor.** It impersonates a second identity, reports whether a
+stranger can read these tables or a client can write the staff-only fields, and
+writes nothing — the block always aborts, which is how it guarantees that. Run
+it after every schema change; that is the whole reason it is a file and not a
+paragraph.
 
 ---
 
@@ -390,7 +400,18 @@ Verified against a real Postgres 16, not just reasoned about:
   order completed, delete it, insert one already completed, create one on another
   account, rewrite a notification title, write their own history, or change their
   profile email. A signed-out caller sees nothing.
-- 94 unit tests pass; typecheck clean.
+
+  **Read that claim precisely: it was proven on local Postgres 16, by hand, once.
+  It has never been run against the hosted project that holds the real data.**
+  The policies are the same SQL and `supabase db push` applied them, so there is
+  every reason to expect the same answer — but "every reason to expect" is the
+  phrase that preceded the `seed_hosted.sql` failure, and a one-off manual check
+  cannot be re-run after a schema change. `supabase/verify_rls.sql` now exists
+  for exactly this: paste it into the hosted SQL editor and it reports on all of
+  it in one pass, writing nothing. **It has never been executed either** — this
+  container has no Postgres and no route to the project — so it is a written
+  check awaiting its first run, not a green tick.
+- 95 unit tests pass; typecheck clean.
 
 The completion chart's vertical axis was wrong from the start and was only
 caught once real data was on screen. It took three fixed fractions of the
@@ -453,6 +474,127 @@ on the login page, no route behind it, no `resetPassword` on `DataProvider`.
 Supabase's built-in sender handles confirmations only, and is rate-limited to a
 handful an hour. `weeklySummary` is a toggle with nothing behind it either: it
 needs a scheduled job, not a row trigger, and none exists.
+
+---
+
+## Security review — 19 Sep 2026
+
+A full pass over the eight-point checklist, against the code as it stands. The
+headline: **the database half of this app is unusually well defended and the
+HTTP half had nothing on it at all.** That asymmetry is typical of a project
+built data-layer-first, and every fix below is on the HTTP side or in the one
+file that renders HTML.
+
+### "Typing /dashboard takes me straight to the dashboard — is that a hole?"
+
+No, and it is worth knowing exactly why, because the reasoning generalises.
+
+You reach it because your browser is holding a valid session. Two independent
+guards stand in front of that route, and a signed-out visitor meets both:
+
+1. `src/middleware.ts` redirects any unauthenticated request under
+   `/dashboard`, `/orders`, `/inbox` or `/settings` to `/login?next=...`.
+   **Measured, not assumed:** `curl -I /dashboard` with no cookie returns
+   `307 → /login?next=%2Fdashboard`.
+2. `src/app/(app)/layout.tsx` calls `data.getCurrentUser()` and redirects if it
+   is null — on the server, before any child page renders.
+
+The second one is the one that matters. Middleware is a redirect, not a
+boundary; Next.js has shipped a middleware-bypass CVE before (CVE-2025-29927,
+fixed well below our 15.5.25), and any app whose only guard is middleware is one
+header trick from serving its private pages. Here middleware is a courtesy that
+produces a nice redirect, the layout check is the actual gate, and RLS is what
+stops data moving even if both were wrong. Three layers, and only the third is
+load-bearing.
+
+**To see it for yourself:** open the site in a private window. You will land on
+`/login`. That is the test — not the tab that is already signed in.
+
+### The checklist, item by item
+
+| # | Item | Verdict |
+|---|---|---|
+| 1 | Secrets & environment | **Pass.** No hardcoded credential anywhere in `src/`. Only `NEXT_PUBLIC_SUPABASE_URL`/`_ANON_KEY` reach the browser, which is what they are for. `DATA_SOURCE` is deliberately un-prefixed so neither provider is ever bundled client-side. Full git history scanned for JWT-, `sb_secret_`-, `sb_publishable_`- and `re_`-shaped strings: **no secret has ever been committed** — the only hits are prose warning against `service_role` and one npm integrity hash. |
+| 2 | Authentication | **Pass.** Two guards, above. Sessions are Supabase cookies refreshed in middleware via `getUser()`, which revalidates with the auth server rather than trusting the cookie — `getSession()` would not, and the code says so. Sign-in failure is worded identically whether the email exists or not, in both providers. |
+| 3 | Authorization | **Pass, and stronger than most.** No provider method accepts a user id from outside; the caller is always resolved from the session. There is no schema and no method that would *accept* a status, priority or assignee change, so the field a client would want to forge has no path to the server at all. |
+| 4 | Database / RLS | **Pass on design; see the caveat above on proof.** RLS on all four tables. `orders` has SELECT and INSERT only, the INSERT policy pins `status = 'draft'`, and a column-level grant means a client cannot even *name* `status`, `priority`, `assignees`, `deliverable` or `order_number`. `order_events` is read-only through parent ownership. `notifications` allows `read_at` and nothing else. Privileges are revoked as well as unpoliced, so a forged write is a clear permission error, not a silent zero-row match. |
+| 5 | Server-side validation | **Pass.** Every input crosses a Zod schema before a provider sees it — forms, URL query params, and the `preferences` jsonb on the way in *and* on the way out. Postgres repeats the important limits as CHECK constraints, so validation is not the only thing standing between a bad value and the table. |
+| 6 | Injection & XSS | **Pass in the app, one real bug in the email.** No `dangerouslySetInnerHTML`, no `innerHTML`, no `eval` anywhere; JSX escapes by default. No SQL is concatenated — PostgREST parameterises. Search terms are stripped of `,()%_*\` before reaching an `ilike`, so a term cannot restructure the filter. **The bug:** the Edge Function interpolated a client-written order title straight into email HTML. Fixed. |
+| 7 | Dependencies | **Pass, after a fix.** Six runtime dependencies, all first-party or Supabase, none invented. `npm audit` reported one high and one moderate — both `postcss`, reached only through Next's own copy. `npm audit fix --force` wanted to drag us to Next 16; an `overrides` pin to `postcss@^8.5.28` fixes it without a major bump. **Now 0 vulnerabilities.** |
+| 8 | API / production | **Was the weak spot.** Headers added (below). Debug detail: fixed (below). Webhook signature verification was already correct and stays. File storage is a private bucket with a one-hour signed URL. No payments exist. **Rate limiting remains absent — see below.** |
+
+### What was fixed
+
+1. **HTML injection in the notification email.** `renderEmail()` interpolated
+   `${title}` raw, and that title carries an order title the client wrote. An
+   order called `<img src=x onerror=...>` became live markup in an email sent
+   under our own domain. Today the recipient is the person who wrote it, which
+   keeps the severity low — but "the attacker is also the victim" is a property
+   of the current recipient list, not of the function, and one CC to staff or
+   one digest would end it. Now escaped, along with the href.
+2. **No security headers at all.** `next.config.ts` now sets a CSP,
+   `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`
+   and HSTS, and drops `X-Powered-By`. **Verified live against `next start`,
+   not just written.** Read the comment in that file for what the CSP does and
+   does not buy: `script-src` carries `'unsafe-inline'` because the App Router
+   streams hydration payloads in inline script tags, so it will not stop an
+   injected inline script. It does stop script from other origins, framing,
+   off-site form posts, plugins and `<base>` rewriting. Nonce-based CSP is the
+   upgrade and it belongs in middleware.
+3. **Raw Postgres errors were being handed to the browser.** Four call sites
+   returned `error.message` verbatim, which names constraints, columns and
+   which policy just refused you — a free schema map, one failed request at a
+   time. Detail now goes to the server log; the user gets "Could not save your
+   settings. Please try again." GoTrue's auth messages are deliberately still
+   passed through: "Password should be at least 6 characters" is for the user.
+4. **`MOCK_SECRET` could ship as its own placeholder.** The mock cookie is
+   signed with `dev-only-change-me` unless overridden — and that string is in
+   this repository. Deploying mock mode without setting it means anyone can
+   sign a session cookie. There is no real data behind mock mode, so the impact
+   is low, but it is not a sentence worth shipping. Production now refuses.
+   **Verified:** a signed-out visitor still gets the normal redirect (the code
+   short-circuits before the secret is needed); the first request carrying a
+   cookie gets a 500 with the reason in the log. Nobody can obtain a session
+   until the variable is set.
+5. **`avatarUrl` accepted `javascript:`.** `z.url()` says that is a valid URL,
+   because it is. Nothing renders the field today — which is exactly why the
+   restriction went in now, rather than on the day someone drops it into an
+   `<img src>` and nobody thinks to re-read the schema. http(s) only, with a
+   test naming four hostile schemes.
+6. **`postcss` advisory.** Pinned via `overrides`. 0 vulnerabilities.
+
+Two documentation lies were also corrected, which matters as much as the code:
+migration `0001` claimed "the end-to-end suite asserts these at the application
+level" — **there is no end-to-end suite**, only `tests/unit`, and Phase 5 never
+arrived. And the Supabase provider's header claimed *every* method scopes its
+query with an explicit `user_id` filter; two `order_events` queries cannot,
+because that table has no such column, so they rest on the RLS policy alone
+with nothing behind them. Both now say what is true.
+
+### What is deliberately still open
+
+- **No rate limiting anywhere in application code.** Sign-in, sign-up and the
+  header search action can all be hammered. Hosted Supabase Auth applies its
+  own per-IP limits to the auth endpoints, which covers the credential-stuffing
+  case — the part that actually matters — but nothing covers the search action
+  or mock mode. This belongs at the edge on deploy, not in a Server Action, so
+  it is a Netlify task. Until then: real, known, unmitigated in our code.
+- **Two checks still need a browser and a second account**, and no amount of
+  SQL replaces them: opening someone else's order by pasting its id into the
+  URL, and downloading someone else's deliverable from the storage bucket. The
+  code path for both looks right — `getOrder` filters by `user_id` and returns
+  `null` indistinguishably for "not yours" and "does not exist" — but looking
+  right is how every bug in this project has introduced itself.
+
+### The honest summary of the final attack test
+
+Every "can an attacker…" question on the list answers **no** on the code as
+written. But "answers no on the code as written" is a weaker claim than "answers
+no", and this project has already been burned once by the gap between them. The
+three that rest on reading rather than running are: **user A reading user B's
+rows on hosted** (`verify_rls.sql` written, unrun), **the two browser checks
+above**, and **whether the expensive endpoints can be spammed** (they can; see
+above).
 
 ---
 
@@ -549,7 +691,19 @@ in the order it is worth doing.
    Authentication → URL Configuration, or confirmation emails will keep
    pointing at `localhost:3000`.
 
-3. **Order-notification email — set aside deliberately, not forgotten.** The
+3. **Run `supabase/verify_rls.sql` against the hosted project.** Two minutes,
+   no risk — it writes nothing. It is the only item on this list that converts
+   a reasoned claim into a tested one, and it turns the ad-hoc local check into
+   something repeatable. Then do the two browser checks it cannot cover: a
+   second account pasting your order id into the URL, and the same account
+   trying to open your deliverable link.
+
+4. **Rate limiting, at the edge, when Netlify happens.** Nothing in this
+   codebase throttles anything. Hosted Supabase covers the auth endpoints,
+   which is the part that matters; the search action and mock mode are
+   uncovered. It belongs beside the deploy, not in a Server Action.
+
+5. **Order-notification email — set aside deliberately, not forgotten.** The
    Edge Function is written and committed and has never run. It was
    deprioritised by an explicit decision, so do not resurrect it as an open
    task; the signed-in inbox already carries every notification, and email is
@@ -557,7 +711,7 @@ in the order it is worth doing.
    picked up again it also needs a verified sending domain, since the test
    sender only reaches your own address.
 
-4. Longer term, if `draft` orders ever need a real client-initiated action
+6. Longer term, if `draft` orders ever need a real client-initiated action
    (the "Submit this order" button the canvas prototyped but never wired up),
    that needs an `updateOrder` method on `DataProvider` and a matching Postgres
    UPDATE policy — a real product decision, not a UI fix. See **Phase 1 — what

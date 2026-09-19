@@ -336,10 +336,11 @@ create policy "deliverables_read_own" on storage.objects
 -- ===========================================================================
 -- Verifying the policies
 -- ===========================================================================
--- Sign in as two different users in two browsers and confirm:
---   1. Each sees only their own orders, events and notifications.
---   2. Neither can open the other's order by pasting its id into the URL.
---   3. Neither can change an order's status, priority or assignees.
---   4. Neither can download the other's deliverable.
--- The end-to-end suite asserts these at the application level.
+-- Run supabase/verify_rls.sql in the SQL editor. It impersonates a second
+-- identity and reports whether a stranger can read these tables or a client
+-- can write the staff-only fields. It writes nothing.
+--
+-- What it does NOT cover, because both need a browser: opening someone else's
+-- order by pasting its id into the URL, and downloading someone else's
+-- deliverable from the storage bucket. Do those by hand with two accounts.
 -- ===========================================================================

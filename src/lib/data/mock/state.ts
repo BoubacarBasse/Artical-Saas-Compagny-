@@ -85,8 +85,30 @@ function fromBase64Url(input: string): string {
 // HMAC
 // ---------------------------------------------------------------------------
 
+const DEV_SECRET = "dev-only-change-me";
+
 function secret(): string {
-  return process.env.MOCK_SECRET || "dev-only-change-me";
+  const configured = process.env.MOCK_SECRET;
+
+  // A published demo signed with a secret that is in the repository is a demo
+  // anyone can sign a cookie for. There is no real data behind it, but "the
+  // session cookie is forgeable" is not a sentence worth shipping.
+  //
+  // Verified behaviour, so nobody is surprised by it: a signed-out visitor
+  // never reaches here (decodeState short-circuits on a missing cookie) and
+  // still gets the ordinary redirect to /login. The first request that
+  // presents a cookie — and every sign-in — gets a 500 with this message in
+  // the server log. Nobody can obtain a session until the variable is set,
+  // which is the point.
+  if (process.env.NODE_ENV === "production" && (!configured || configured === DEV_SECRET)) {
+    throw new Error(
+      "MOCK_SECRET is unset or still the placeholder. Set it to a long random " +
+        "string in the host's environment variables before serving mock mode " +
+        "in production, or set DATA_SOURCE=supabase.",
+    );
+  }
+
+  return configured || DEV_SECRET;
 }
 
 async function hmacKey(): Promise<CryptoKey> {

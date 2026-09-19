@@ -158,6 +158,24 @@ test.describe("profile patch", () => {
     expect(profilePatchSchema.safeParse({ avatarUrl: "not-a-url" }).success).toBe(false);
   });
 
+  test("rejects a well-formed avatar URL that is not http(s)", () => {
+    // Each of these parses as a valid URL. That is the trap: "valid URL" and
+    // "safe to put in an href" are different questions.
+    for (const hostile of [
+      "javascript:alert(document.cookie)",
+      "JavaScript:alert(1)",
+      "data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==",
+      "vbscript:msgbox(1)",
+    ]) {
+      expect(profilePatchSchema.safeParse({ avatarUrl: hostile }).success).toBe(false);
+    }
+
+    expect(profilePatchSchema.safeParse({ avatarUrl: "https://example.com/a.png" }).success)
+      .toBe(true);
+    expect(profilePatchSchema.safeParse({ avatarUrl: "http://example.com/a.png" }).success)
+      .toBe(true);
+  });
+
   test("offers no way to change email or id", () => {
     // Locked at the database level too, with column-level grants.
     const parsed = profilePatchSchema.parse({
