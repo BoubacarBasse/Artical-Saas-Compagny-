@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { MonthlyCompletions } from "@/lib/data/types";
+import { chartAxis } from "@/lib/orders/stats";
 
 const FULL_MONTH: Record<string, string> = {
   Jan: "January", Feb: "February", Mar: "March", Apr: "April",
@@ -9,15 +10,12 @@ const FULL_MONTH: Record<string, string> = {
   Sep: "September", Oct: "October", Nov: "November", Dec: "December",
 };
 
-function ticks(max: number): number[] {
-  const top = Math.max(max, 1);
-  return [top, Math.round((top * 2) / 3), Math.round(top / 3), 0];
-}
-
 export function CompletionsChart({ months }: { months: MonthlyCompletions[] }) {
   const [hovered, setHovered] = useState<number | null>(null);
-  const max = Math.max(...months.map((m) => m.count), 0);
-  const barHeight = (count: number) => (count === 0 ? 3 : Math.max(3, (count / Math.max(max, 1)) * 154));
+  const { top, ticks } = chartAxis(Math.max(...months.map((m) => m.count), 0));
+  // Bars are measured against the axis top, not the tallest bar, or a bar would
+  // not line up with the gridline its own value is printed beside.
+  const barHeight = (count: number) => (count === 0 ? 3 : Math.max(3, (count / top) * 154));
 
   const currentMonth = months[months.length - 1];
 
@@ -25,13 +23,13 @@ export function CompletionsChart({ months }: { months: MonthlyCompletions[] }) {
     <div>
       <div className="flex gap-2.5">
         <div className="flex w-3.5 flex-col justify-between pb-5.5 text-right font-mono text-[10.5px] text-fg-faint">
-          {ticks(max).map((t, i) => (
+          {ticks.map((t, i) => (
             <div key={i}>{t}</div>
           ))}
         </div>
         <div className="relative flex-1">
           <div className="absolute inset-x-0 top-0 bottom-5.5 flex flex-col justify-between">
-            {ticks(max).map((_, i) => (
+            {ticks.map((_, i) => (
               <div key={i} className="h-px bg-chart-grid" />
             ))}
           </div>

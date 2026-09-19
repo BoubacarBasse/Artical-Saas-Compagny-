@@ -381,7 +381,25 @@ Verified against a real Postgres 16, not just reasoned about:
   order completed, delete it, insert one already completed, create one on another
   account, rewrite a notification title, write their own history, or change their
   profile email. A signed-out caller sees nothing.
-- 84 unit tests pass; typecheck clean.
+- 94 unit tests pass; typecheck clean.
+
+The completion chart's vertical axis was wrong from the start and was only
+caught once real data was on screen. It took three fixed fractions of the
+tallest bar and rounded each: `[top, round(top*2/3), round(top/3), 0]`. At a
+maximum of two — which is exactly what a seeded account produces — that prints
+`2, 1, 1, 0`, the same label twice. At four it prints `4, 3, 1, 0` beside
+gridlines that are still evenly spaced, so the line labelled 3 sits at two
+thirds of the height while a bar of 3 reaches three quarters. The chart was
+lying, and nothing on screen said so. It happened to be correct only when the
+maximum was a multiple of three.
+
+`chartAxis()` in `src/lib/orders/stats.ts` replaces it: the top is rounded up
+to divide evenly by the number of gaps, bars scale against that same top rather
+than against the tallest bar, and every label lands on its own gridline. The
+cost is that a tall bar can stop short of the frame. It lives in `stats.ts`
+rather than in the chart component because getting it wrong is a data bug
+wearing a layout costume, and it is worth unit-testing over a range of inputs
+rather than eyeballing.
 
 One test had to be moved rather than fixed. `seed.spec.ts` asserted that the
 seeded deliveries left at least one empty month in the seven-month chart window,

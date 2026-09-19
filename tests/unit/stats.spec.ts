@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import {
   CHART_MONTHS,
+  chartAxis,
   completionsByMonth,
   computeDashboardStats,
   recentMonths,
@@ -90,5 +91,51 @@ test.describe("dashboard stats", () => {
     expect(s.total).toBe(0);
     expect(s.completionsByMonth).toHaveLength(CHART_MONTHS);
     expect(s.completionsByMonth.every((m) => m.count === 0)).toBe(true);
+  });
+});
+
+test.describe("chart axis", () => {
+  test("never prints the same label twice", () => {
+    // The bug this replaces printed 2, 1, 1, 0 at a maximum of two, which is
+    // what a seeded account actually produces, so it was on screen the whole
+    // time.
+    for (let max = 0; max <= 40; max++) {
+      const { ticks } = chartAxis(max);
+      expect(new Set(ticks).size, `duplicate label at max=${max}`).toBe(ticks.length);
+    }
+  });
+
+  test("labels are whole numbers, descending, ending at zero", () => {
+    for (let max = 0; max <= 40; max++) {
+      const { ticks } = chartAxis(max);
+      expect(ticks[ticks.length - 1], `max=${max}`).toBe(0);
+      for (const t of ticks) expect(Number.isInteger(t), `max=${max}`).toBe(true);
+      for (let i = 1; i < ticks.length; i++) {
+        expect(ticks[i - 1] > ticks[i], `not descending at max=${max}`).toBe(true);
+      }
+    }
+  });
+
+  test("labels sit exactly on their evenly spaced gridlines", () => {
+    // This is the one that matters. Gridlines are laid out with
+    // justify-between, so they are evenly spaced whatever the labels say. If
+    // the labels are not evenly spaced too, a bar lands beside a line whose
+    // number it does not have.
+    for (let max = 0; max <= 40; max++) {
+      const { top, ticks } = chartAxis(max);
+      const gaps = ticks.length - 1;
+      ticks.forEach((t, i) => {
+        expect(t, `label ${i} off its gridline at max=${max}`).toBe(
+          Math.round(top * ((gaps - i) / gaps)),
+        );
+        expect(t).toBe(top * ((gaps - i) / gaps));
+      });
+    }
+  });
+
+  test("the top is never below the tallest bar", () => {
+    for (let max = 0; max <= 40; max++) {
+      expect(chartAxis(max).top).toBeGreaterThanOrEqual(Math.max(max, 1));
+    }
   });
 });

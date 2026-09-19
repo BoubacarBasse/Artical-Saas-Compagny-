@@ -95,3 +95,39 @@ export function computeDashboardStats(
     completionsByMonth: completionsByMonth(deliveredAt, CHART_MONTHS, now),
   };
 }
+
+/**
+ * The completion chart's vertical axis: a top value and the labels to print
+ * beside evenly spaced gridlines, highest first.
+ *
+ * It lives here rather than in the chart component because getting it wrong is
+ * a data bug wearing a layout costume. The previous version took three fixed
+ * fractions of the maximum and rounded each one:
+ *
+ *     [top, round(top * 2 / 3), round(top / 3), 0]
+ *
+ * At a maximum of 2 that prints 2, 1, 1, 0 — the same label twice. At 1 it
+ * prints 1, 1, 0, 0. Both are merely ugly. At 4 it prints 4, 3, 1, 0 against
+ * gridlines that are still evenly spaced, so the line labelled 3 sits at two
+ * thirds of the height while a bar of 3 reaches three quarters. That is a chart
+ * that lies, and a reader has no way to see it happening.
+ *
+ * So the top is rounded up to something that divides evenly by the number of
+ * gaps, and the bars are scaled against that same top. Every label then lands
+ * on its own line, and the cost is only that a tall bar may stop short of the
+ * frame.
+ */
+export function chartAxis(max: number): { top: number; ticks: number[] } {
+  // An empty chart still needs a frame to be empty inside of.
+  if (max <= 1) return { top: 1, ticks: [1, 0] };
+
+  // Below four, one gridline per unit is exact and needs no rounding at all.
+  if (max <= 3) {
+    return { top: max, ticks: Array.from({ length: max + 1 }, (_, i) => max - i) };
+  }
+
+  // Otherwise four gridlines, with a top that is a multiple of three so the two
+  // middle ones are whole numbers.
+  const top = Math.ceil(max / 3) * 3;
+  return { top, ticks: [top, (top / 3) * 2, top / 3, 0] };
+}
