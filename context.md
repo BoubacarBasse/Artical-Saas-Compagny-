@@ -60,7 +60,7 @@ Light mode only. Committed to in planning; it also halves the token layer.
 | Order-notification email | **Written, never run — and deprioritised by decision.** Edge Function committed, not deployed. Do not treat this as an open task; it was consciously set aside. |
 | Security review | **Done and verified, 19-20 Sep 2026.** Six fixes shipped. RLS proven on hosted by `verify_rls.sql` (12/12) and the two URL/deliverable checks done with two real accounts. Only rate limiting is left, and it belongs with the deploy. |
 | Password reset | **Missing.** No link, no route, no provider method. |
-| Deploy to Netlify | **Site created and configured, first deploy not yet run.** `article-orders` (site id in `netlify.toml`), all three environment variables set, supabase-mode production build verified locally. The build itself has not been triggered — see *Deploying* below. |
+| Deploy to Netlify | **Live.** https://article-orders.netlify.app — deploy `6aafc8d7`, production, green, built from commit `f5d940a` on this branch. Two post-deploy items remain, both in *Deploying* below. |
 
 ### Phase 1 — what got built
 
@@ -502,30 +502,44 @@ Already done: the site is created, all three environment variables are set on
 all contexts and scopes, and a **production build in supabase mode was verified
 locally** before any of it — same 11 routes, clean.
 
-Not done: **the build has never been triggered**, so the URL above serves
-nothing yet. Do not describe this app as deployed until a deploy is green and
-someone has loaded the page.
+### The first deploy — 20 Sep 2026
 
-### Connect it to GitHub — the option worth taking
+Deploy `6aafc8d7f099639e2efa0f9f`, context `production`, state `ready`,
+`error_message: null`. Built in 60 seconds from **commit `f5d940a` on
+`claude/article-ordering-webapp-k6vwb4`** — the branch head, which is the thing
+that mattered: the Windows working copy is a GitHub ZIP download rather than a
+clone, so a deploy sourced from *that* folder would have shipped a snapshot
+that predates the chart fix and the whole security pass. It did not. What is
+live is what was reviewed.
 
-Netlify → **article-orders** → *Project configuration → Build & deploy →
-Continuous deployment → Link repository* → GitHub →
-`BoubacarBasse/Artical-Saas-Compagny-`, branch
-`claude/article-ordering-webapp-k6vwb4`. Build command and publish directory
-come from `netlify.toml`; leave them.
+It deployed one serverless function (the Next.js server handler) and **one edge
+function** — that is `src/middleware.ts`, so the route guard runs at the edge.
 
-This is better than a one-off upload for a reason specific to this project:
-**the local working copy on Windows is a GitHub ZIP download, not a clone** —
-`git pull` there returns `fatal: not a git repository`. A CLI deploy uploads
-whatever is in that folder, which is a copy that cannot be updated and is
-already behind. Git-linked deploys build the committed branch, so what ships is
-what was reviewed, every time, with no chance of shipping a stale ZIP.
+**Unverified from inside the build container:** this environment's outbound
+proxy refuses to tunnel to `netlify.app` (`CONNECT tunnel failed, response
+403`), so the live response has never been inspected from here. Everything
+above is read from the Netlify deploy record, which is authoritative about the
+build and silent about what the page actually serves.
 
-### The CLI alternative
+### Still to check on the live site
 
-`netlify deploy` from a real clone also works and needs no dashboard clicking.
-It uploads the working directory and builds it on Netlify. Only do this from a
-fresh `git clone`, never from the ZIP folder.
+Worth doing once, from a machine that can reach it:
+
+```
+curl -sI https://article-orders.netlify.app/login | grep -i "content-security\|x-frame\|strict-transport"
+curl -sI https://article-orders.netlify.app/dashboard | grep -i "^HTTP\|^location"
+```
+
+The first confirms the headers set in `next.config.ts` survived Netlify's
+runtime rather than being dropped by it — they were verified against
+`next start` locally and that is not the same platform. The second should be a
+`307` to `/login?next=%2Fdashboard`.
+
+Also confirm **future pushes actually redeploy**. The deploy record carries a
+commit ref, which points at a git-linked build, but its `deploy_source` reads
+`api` — so make one trivial push and watch whether a build starts on its own.
+If it does not, link the repo under *Project configuration → Build & deploy →
+Continuous deployment*, branch `claude/article-ordering-webapp-k6vwb4`.
 
 ### After the first green deploy
 
@@ -762,11 +776,12 @@ in the order it is worth doing.
    Authentication → Emails. Small, self-contained, and unlike the email feature
    it is a gap rather than an enhancement.
 
-2. **Finish the Netlify deploy.** The site exists and is configured; only the
-   build has not been run. See *Deploying* below for the two ways to trigger
-   it and why one is clearly better. Then set the Site URL under Supabase
-   Authentication → URL Configuration, or confirmation and reset links will
-   keep pointing at `localhost:3000`.
+2. **Set the Supabase Site URL — the site is live and this is now urgent.**
+   Authentication → URL Configuration → Site URL
+   `https://article-orders.netlify.app`, and the same under Redirect URLs.
+   Until then every confirmation and password-reset link points at
+   `localhost:3000`, so anyone who signs up on the live site is stranded.
+   Then the two checks in *Deploying* above.
 
 3. **Rate limiting, at the edge, as part of the deploy above.** Nothing in
    this codebase throttles anything. Hosted Supabase covers the auth
