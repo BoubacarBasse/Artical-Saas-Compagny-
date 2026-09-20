@@ -3,10 +3,14 @@
 -- ===========================================================================
 -- Paste this whole file into the Supabase SQL editor and run it.
 --
--- IT WRITES NOTHING. The block always ends in `raise exception`, so every
--- statement inside it is rolled back and the report arrives as the error
--- message. A result that opens with RLS CHECK PASSED is a pass -- the abort is
--- how the file guarantees it changed no data, not a failure.
+-- IT ALWAYS ENDS IN AN ERROR, AND THAT IS THE PASS.
+-- The editor will show `ERROR: P0001` followed by the report. Read the report,
+-- not the word ERROR. `P0001` carrying RLS CHECK PASSED is the success case.
+-- The block ends in `raise exception` on purpose: the abort is what rolls back
+-- every statement inside it, and is therefore what guarantees this file cannot
+-- change your data even if a check goes wrong halfway through.
+--
+-- First run: hosted project, 20 Sep 2026, 12 of 12 checks passed.
 --
 -- WHY IMPERSONATION RATHER THAN TWO REAL BROWSERS
 -- RLS reads auth.uid() out of request.jwt.claims and applies to the

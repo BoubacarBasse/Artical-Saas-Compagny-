@@ -58,7 +58,7 @@ Light mode only. Committed to in planning; it also halves the token layer.
 | Hosted Supabase | **Live, verified, and seeded.** Schema pushed; app signed in with the banner gone; seeded and confirmed at 13 orders / 53 events / 2 unread. |
 | Staff workflow on hosted | **Witnessed.** One `status` cell edited in the table editor moved the dashboard tiles, added the timeline row and incremented the inbox badge, with nothing else touched. |
 | Order-notification email | **Written, never run — and deprioritised by decision.** Edge Function committed, not deployed. Do not treat this as an open task; it was consciously set aside. |
-| Security review | **Done, 19 Sep 2026.** Full checklist below. Six fixes shipped; two items deliberately left open. |
+| Security review | **Done and verified, 19-20 Sep 2026.** Six fixes shipped. RLS proven on hosted by `verify_rls.sql` (12/12) and the two URL/deliverable checks done with two real accounts. Only rate limiting is left, and it belongs with the deploy. |
 | Password reset | **Missing.** No link, no route, no provider method. |
 | Deploy to Netlify | Deferred by choice. `netlify.toml` and the plugin are already in place. |
 
@@ -401,16 +401,32 @@ Verified against a real Postgres 16, not just reasoned about:
   account, rewrite a notification title, write their own history, or change their
   profile email. A signed-out caller sees nothing.
 
-  **Read that claim precisely: it was proven on local Postgres 16, by hand, once.
-  It has never been run against the hosted project that holds the real data.**
-  The policies are the same SQL and `supabase db push` applied them, so there is
-  every reason to expect the same answer — but "every reason to expect" is the
-  phrase that preceded the `seed_hosted.sql` failure, and a one-off manual check
-  cannot be re-run after a schema change. `supabase/verify_rls.sql` now exists
-  for exactly this: paste it into the hosted SQL editor and it reports on all of
-  it in one pass, writing nothing. **It has never been executed either** — this
-  container has no Postgres and no route to the project — so it is a written
-  check awaiting its first run, not a green tick.
+  **And it has now been proven on hosted, which is the claim that matters.**
+  `supabase/verify_rls.sql` was run in the hosted SQL editor on 20 Sep 2026 and
+  returned `RLS CHECK PASSED` on all twelve checks, with the positive control
+  holding: the owner saw all 14 of their own orders (the seeded 13 plus one
+  added since), so the four "a stranger sees
+  nothing" results are real refusals and not RLS denying everything to
+  everyone. A stranger saw no orders, no history, no notifications and no
+  profiles. The owner was refused on all seven staff-only writes — completing
+  their own order, raising its priority, deleting it, opening one already
+  completed, writing their own history, inventing a notification, and
+  rewriting the email on their own profile.
+
+  The run ends in `ERROR: P0001`. That is the script working: the block always
+  aborts, and the abort is what guarantees it wrote nothing. A `P0001` carrying
+  `RLS CHECK PASSED` is the success case, not a failure to debug.
+
+  This closes the gap that the `seed_hosted.sql` episode opened — a claim
+  verified against a local stand-in and then described in terms of production.
+  The local check was real but unrepeatable; this one is a file, so it can be
+  re-run after every schema change, and it should be.
+
+- **The two checks that needed a browser were done, with two real accounts.**
+  A second account in a private window could not open the first account's order
+  by pasting its id into the URL, and could not reach its deliverable link.
+  Those are the two things no amount of SQL can prove, and they now rest on
+  someone having actually tried it rather than on `getOrder` looking correct.
 - 95 unit tests pass; typecheck clean.
 
 The completion chart's vertical axis was wrong from the start and was only
@@ -579,22 +595,24 @@ with nothing behind them. Both now say what is true.
   case — the part that actually matters — but nothing covers the search action
   or mock mode. This belongs at the edge on deploy, not in a Server Action, so
   it is a Netlify task. Until then: real, known, unmitigated in our code.
-- **Two checks still need a browser and a second account**, and no amount of
-  SQL replaces them: opening someone else's order by pasting its id into the
-  URL, and downloading someone else's deliverable from the storage bucket. The
-  code path for both looks right — `getOrder` filters by `user_id` and returns
-  `null` indistinguishably for "not yours" and "does not exist" — but looking
-  right is how every bug in this project has introduced itself.
+
+That is now the only item on this list. **The two browser checks are done**
+(two accounts, private window, both refused) and **`verify_rls.sql` has been
+run on hosted and passed all twelve checks.** See *What is verified* above.
 
 ### The honest summary of the final attack test
 
-Every "can an attacker…" question on the list answers **no** on the code as
-written. But "answers no on the code as written" is a weaker claim than "answers
-no", and this project has already been burned once by the gap between them. The
-three that rest on reading rather than running are: **user A reading user B's
-rows on hosted** (`verify_rls.sql` written, unrun), **the two browser checks
-above**, and **whether the expensive endpoints can be spammed** (they can; see
-above).
+Every "can an attacker…" question on the list answers **no**, and as of
+20 Sep 2026 that is no longer a claim resting on reading the code. Eleven of
+the twelve answer no because someone ran the check: `verify_rls.sql` against
+hosted for the database questions, two real accounts in a private window for
+the URL and deliverable questions.
+
+**One still answers yes, and it is the rate-limiting one.** An expensive
+endpoint can be spammed, because nothing in this codebase throttles anything.
+Hosted Supabase covers the auth endpoints; the header search action and mock
+mode are uncovered. It is a Netlify task, it is named above, and it is the one
+thing on the checklist this project has not closed.
 
 ---
 
@@ -691,19 +709,14 @@ in the order it is worth doing.
    Authentication → URL Configuration, or confirmation emails will keep
    pointing at `localhost:3000`.
 
-3. **Run `supabase/verify_rls.sql` against the hosted project.** Two minutes,
-   no risk — it writes nothing. It is the only item on this list that converts
-   a reasoned claim into a tested one, and it turns the ad-hoc local check into
-   something repeatable. Then do the two browser checks it cannot cover: a
-   second account pasting your order id into the URL, and the same account
-   trying to open your deliverable link.
+3. **Rate limiting, at the edge, as part of the deploy above.** Nothing in
+   this codebase throttles anything. Hosted Supabase covers the auth
+   endpoints, which is the part that matters; the header search action and
+   mock mode are uncovered. It belongs beside the deploy, not in a Server
+   Action — which is why it is stapled to item 2 rather than standing alone.
+   **This is the last open item from the security review.**
 
-4. **Rate limiting, at the edge, when Netlify happens.** Nothing in this
-   codebase throttles anything. Hosted Supabase covers the auth endpoints,
-   which is the part that matters; the search action and mock mode are
-   uncovered. It belongs beside the deploy, not in a Server Action.
-
-5. **Order-notification email — set aside deliberately, not forgotten.** The
+4. **Order-notification email — set aside deliberately, not forgotten.** The
    Edge Function is written and committed and has never run. It was
    deprioritised by an explicit decision, so do not resurrect it as an open
    task; the signed-in inbox already carries every notification, and email is
@@ -711,7 +724,7 @@ in the order it is worth doing.
    picked up again it also needs a verified sending domain, since the test
    sender only reaches your own address.
 
-6. Longer term, if `draft` orders ever need a real client-initiated action
+5. Longer term, if `draft` orders ever need a real client-initiated action
    (the "Submit this order" button the canvas prototyped but never wired up),
    that needs an `updateOrder` method on `DataProvider` and a matching Postgres
    UPDATE policy — a real product decision, not a UI fix. See **Phase 1 — what
