@@ -60,7 +60,7 @@ Light mode only. Committed to in planning; it also halves the token layer.
 | Order-notification email | **Written, never run — and deprioritised by decision.** Edge Function committed, not deployed. Do not treat this as an open task; it was consciously set aside. |
 | Security review | **Done and verified, 19-20 Sep 2026.** Six fixes shipped. RLS proven on hosted by `verify_rls.sql` (12/12) and the two URL/deliverable checks done with two real accounts. Only rate limiting is left, and it belongs with the deploy. |
 | Password reset | **Missing.** No link, no route, no provider method. |
-| Deploy to Netlify | Deferred by choice. `netlify.toml` and the plugin are already in place. |
+| Deploy to Netlify | **Site created and configured, first deploy not yet run.** `article-orders` (site id in `netlify.toml`), all three environment variables set, supabase-mode production build verified locally. The build itself has not been triggered — see *Deploying* below. |
 
 ### Phase 1 — what got built
 
@@ -493,6 +493,65 @@ needs a scheduled job, not a row trigger, and none exists.
 
 ---
 
+## Deploying
+
+**Site:** `article-orders` → https://article-orders.netlify.app
+**Site ID:** `c5fdfe6f-5da3-4de6-aa54-61c968d7ba1a`
+
+Already done: the site is created, all three environment variables are set on
+all contexts and scopes, and a **production build in supabase mode was verified
+locally** before any of it — same 11 routes, clean.
+
+Not done: **the build has never been triggered**, so the URL above serves
+nothing yet. Do not describe this app as deployed until a deploy is green and
+someone has loaded the page.
+
+### Connect it to GitHub — the option worth taking
+
+Netlify → **article-orders** → *Project configuration → Build & deploy →
+Continuous deployment → Link repository* → GitHub →
+`BoubacarBasse/Artical-Saas-Compagny-`, branch
+`claude/article-ordering-webapp-k6vwb4`. Build command and publish directory
+come from `netlify.toml`; leave them.
+
+This is better than a one-off upload for a reason specific to this project:
+**the local working copy on Windows is a GitHub ZIP download, not a clone** —
+`git pull` there returns `fatal: not a git repository`. A CLI deploy uploads
+whatever is in that folder, which is a copy that cannot be updated and is
+already behind. Git-linked deploys build the committed branch, so what ships is
+what was reviewed, every time, with no chance of shipping a stale ZIP.
+
+### The CLI alternative
+
+`netlify deploy` from a real clone also works and needs no dashboard clicking.
+It uploads the working directory and builds it on Netlify. Only do this from a
+fresh `git clone`, never from the ZIP folder.
+
+### After the first green deploy
+
+1. **Supabase → Authentication → URL Configuration.** Set Site URL to
+   `https://article-orders.netlify.app` and add it to Redirect URLs. Until this
+   is done every confirmation and password-reset link points at
+   `localhost:3000`, so a new account on the live site is stranded. This is the
+   single most likely thing to be forgotten and the most confusing to debug.
+2. **Expect public sign-ups to mostly fail, and know why.** Hosted Supabase has
+   "Confirm email" on, and its built-in sender is rate-limited to a handful an
+   hour with no custom SMTP configured. That is fine for your own account and
+   unacceptable for real users — custom SMTP is a prerequisite for anyone else
+   signing up, and it is the same prerequisite as password reset.
+3. **Check the security headers survived the platform.** They are set in
+   `next.config.ts` and were verified against `next start`; confirm they are
+   still on the live response rather than assuming Netlify passed them through.
+
+### Flipping back to a safe public demo
+
+`DATA_SOURCE=mock` on the site, plus `MOCK_SECRET` set to a long random string,
+redeploy. That is the whole change — it is the swap point doing its job. Mock
+mode with no `MOCK_SECRET` will refuse to serve a session in production, on
+purpose.
+
+---
+
 ## Security review — 19 Sep 2026
 
 A full pass over the eight-point checklist, against the code as it stands. The
@@ -703,11 +762,11 @@ in the order it is worth doing.
    Authentication → Emails. Small, self-contained, and unlike the email feature
    it is a gap rather than an enhancement.
 
-2. **Deploy to Netlify.** `netlify.toml` and the plugin are already committed
-   and `npm run build` is clean. Needs the four environment variables set in
-   the Netlify UI, and the site URL added under Supabase
-   Authentication → URL Configuration, or confirmation emails will keep
-   pointing at `localhost:3000`.
+2. **Finish the Netlify deploy.** The site exists and is configured; only the
+   build has not been run. See *Deploying* below for the two ways to trigger
+   it and why one is clearly better. Then set the Site URL under Supabase
+   Authentication → URL Configuration, or confirmation and reset links will
+   keep pointing at `localhost:3000`.
 
 3. **Rate limiting, at the edge, as part of the deploy above.** Nothing in
    this codebase throttles anything. Hosted Supabase covers the auth

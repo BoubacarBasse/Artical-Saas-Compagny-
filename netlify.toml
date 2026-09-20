@@ -1,12 +1,31 @@
-# Inert config — committed so deployment is a one-step job later.
-# Nothing is published from this repo yet (deploy deferred by request).
+# Netlify configuration.
 #
-# When deploy resumes, set these in the Netlify UI under
-# Site configuration -> Environment variables:
-#   DATA_SOURCE                     mock | supabase
-#   MOCK_SECRET                     (random string, mock mode only)
-#   NEXT_PUBLIC_SUPABASE_URL        (supabase mode only)
-#   NEXT_PUBLIC_SUPABASE_ANON_KEY   (supabase mode only)
+# Site: article-orders  (https://article-orders.netlify.app)
+# Site ID: c5fdfe6f-5da3-4de6-aa54-61c968d7ba1a
+#
+# ENVIRONMENT (already set on the site, all contexts, all scopes)
+#   DATA_SOURCE                    supabase
+#   NEXT_PUBLIC_SUPABASE_URL       https://<project-ref>.supabase.co
+#   NEXT_PUBLIC_SUPABASE_ANON_KEY  the sb_publishable_ key
+#
+# None of the three is marked "secret", deliberately. Netlify's secrets
+# scanning fails a build when a value it has been told is secret shows up in
+# the build output — and a NEXT_PUBLIC_ variable is inlined into the client
+# bundle by definition. Marking them secret would break every build to protect
+# a key that is designed to be public. The service_role key is the one that
+# must never appear here, and it does not.
+#
+# MOCK_SECRET is absent because DATA_SOURCE=supabase means the mock provider
+# never runs. If you ever flip DATA_SOURCE to mock, you MUST also set
+# MOCK_SECRET to a long random string: production refuses to sign the demo
+# cookie with the placeholder that is checked into this repository.
+#
+# AFTER THE FIRST DEPLOY, in the Supabase dashboard:
+#   Authentication -> URL Configuration -> Site URL
+#     https://article-orders.netlify.app
+#   and add the same under Redirect URLs.
+# Without it, confirmation and password-reset links point at localhost:3000
+# and every new account is stranded.
 
 [build]
   command = "npm run build"
